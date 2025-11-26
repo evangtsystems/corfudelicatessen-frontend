@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getApiBase } from "../../src/lib/apiBase";
 
-export default function VerifyEmailPage() {
+function VerifyEmailInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -26,7 +27,6 @@ export default function VerifyEmailPage() {
         const data = await res.json();
         setMsg(data.message);
 
-        // optional redirect after success
         if (data.success) {
           setTimeout(() => {
             router.push("/login");
@@ -61,5 +61,13 @@ export default function VerifyEmailPage() {
         </p>
       )}
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40 }}>Φόρτωση...</div>}>
+      <VerifyEmailInner />
+    </Suspense>
   );
 }

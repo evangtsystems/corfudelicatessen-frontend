@@ -1,12 +1,16 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getApiBase } from "../../src/lib/apiBase";
 import { getToken } from "../../src/lib/auth";
 
 const theme = { primary: "#1f3b2e", accent: "#d1b76e" };
 
-export default function ShopPage() {
+// ------------------------------------------------------
+// WRAPPED INNER COMPONENT (required for useSearchParams)
+// ------------------------------------------------------
+function ShopPageInner() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState({});
   const [user, setUser] = useState({ approved: false, role: "client" });
@@ -18,7 +22,7 @@ export default function ShopPage() {
   const mainCategory = searchParams.get("mainCategory") || "";
   const category = searchParams.get("category") || "";
 
-  // ✅ Load categories for submenus
+  // Load categories
   useEffect(() => {
     fetch(`${getApiBase()}/api/categories`)
       .then((r) => r.json())
@@ -26,7 +30,7 @@ export default function ShopPage() {
       .catch(console.error);
   }, []);
 
-  // ✅ Fetch products when filters change
+  // Fetch products + decode user
   useEffect(() => {
     const params = new URLSearchParams();
     if (mainCategory) params.set("mainCategory", mainCategory);
@@ -38,7 +42,6 @@ export default function ShopPage() {
         if (d.success) setProducts(d.products);
       });
 
-    // decode user from token (lightweight)
     const token = getToken();
     if (token) {
       try {
@@ -55,7 +58,10 @@ export default function ShopPage() {
         return prev.map((i) =>
           i.productId === p._id ? { ...i, quantity: i.quantity + 1 } : i
         );
-      return [...prev, { productId: p._id, name: p.name, price: p.price, quantity: 1 }];
+      return [
+        ...prev,
+        { productId: p._id, name: p.name, price: p.price, quantity: 1 },
+      ];
     });
   };
 
@@ -69,10 +75,11 @@ export default function ShopPage() {
           : "—"}
       </div>
     ) : (
-      <div style={{ fontStyle: "italic", color: "#777" }}>Login/approval required</div>
+      <div style={{ fontStyle: "italic", color: "#777" }}>
+        Login/approval required
+      </div>
     );
 
-  // ✅ Filter for search query
   const filtered = products.filter(
     (p) =>
       !query ||
@@ -89,7 +96,7 @@ export default function ShopPage() {
         {mainCategory || "Shop"}
       </h1>
 
-      {/* ✅ Show subcategory filters */}
+      {/* Subcategory buttons */}
       {subCategories.length > 0 && (
         <div
           style={{
@@ -104,7 +111,9 @@ export default function ShopPage() {
               key={sub}
               onClick={() =>
                 router.push(
-                  `/shop?mainCategory=${encodeURIComponent(mainCategory)}&category=${encodeURIComponent(sub)}`
+                  `/shop?mainCategory=${encodeURIComponent(
+                    mainCategory
+                  )}&category=${encodeURIComponent(sub)}`
                 )
               }
               style={{
@@ -126,14 +135,13 @@ export default function ShopPage() {
         </div>
       )}
 
-      {/* ✅ Show “No results” message if empty */}
       {filtered.length === 0 && (
         <p style={{ color: "#777", fontStyle: "italic" }}>
           Δεν βρέθηκαν προϊόντα
         </p>
       )}
 
-      {/* ✅ Product Grid */}
+      {/* Product grid */}
       <div
         style={{
           display: "grid",
@@ -177,7 +185,9 @@ export default function ShopPage() {
                   }}
                 />
               ) : (
-                <span style={{ color: "#999" }}>{p.category || "No Image"}</span>
+                <span style={{ color: "#999" }}>
+                  {p.category || "No Image"}
+                </span>
               )}
             </div>
 
@@ -187,6 +197,7 @@ export default function ShopPage() {
             <div style={{ color: "#555", minHeight: 40 }}>
               {p.description || ""}
             </div>
+
             {priceCell(p)}
 
             <button
@@ -210,5 +221,16 @@ export default function ShopPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+// ------------------------------------------------------
+// PAGE WRAPPED IN <Suspense> (REQUIRED FIX)
+// ------------------------------------------------------
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<div>Loading shop…</div>}>
+      <ShopPageInner />
+    </Suspense>
   );
 }
