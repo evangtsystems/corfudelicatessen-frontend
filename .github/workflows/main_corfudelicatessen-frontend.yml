@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy Node.js app to Azure Web App - CorfuDelicatessen-frontend
+name: Build and deploy Next.js SSR app to Azure Web App
 
 on:
   push:
@@ -12,42 +9,49 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js version
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '20.x'
+          node-version: '20'
 
-      - name: npm install, build, and test
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Next.js app
+        run: npm run build
+
+      - name: Prepare deployment package
         run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+          mkdir deploy
+          cp -R .next deploy/.next
+          cp -R public deploy/public
+          cp package.json deploy/package.json
+          cp package-lock.json deploy/package-lock.json
+          cp next.config.mjs deploy/next.config.mjs
+          # include node_modules for SSR
+          cp -R node_modules deploy/node_modules
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
-          path: .
+          name: nextjs-app
+          path: deploy
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: node-app
-      
+          name: nextjs-app
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -55,11 +59,11 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_29DE0087621B43E6BBB679B14A4885BC }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BD465C7BE7344191A99AE66CE864EC93 }}
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'CorfuDelicatessen-frontend'
-          slot-name: 'Production'
           package: .
+
+
           
