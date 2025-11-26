@@ -1,6 +1,13 @@
+// src/lib/apiBase.js
+
+const PROD_API_BASE = "https://corfudelicatessen-backend-bhfvafbgh7cabmas.italynorth-01.azurewebsites.net";
+const DEV_API_BASE = "http://localhost:5000";
+
 export function getApiBase() {
-  if (typeof window !== "undefined") {
-    return process.env.NEXT_PUBLIC_BACKEND_URL || window.location.origin;
+  if (process.env.NODE_ENV === "production") {
+    return PROD_API_BASE;
   }
-  return process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+
+  // Local development
+  return DEV_API_BASE;
 }
