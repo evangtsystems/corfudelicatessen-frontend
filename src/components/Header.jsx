@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { getApiBase } from '../lib/apiBase';
+
 
 export default function Header() {
   const pathname = usePathname();
@@ -37,7 +39,7 @@ export default function Header() {
   useEffect(() => {
     async function loadCategories() {
       try {
-        const res = await fetch("http://localhost:5000/api/categories");
+        const res = await fetch(`${getApiBase()}/api/categories`);
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         setCategories(data);
