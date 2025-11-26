@@ -1,11 +1,11 @@
 {
   "name": "corfu-deli-frontend",
   "private": true,
-"type": "module",
+  "type": "module",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
-    "start": "next start -p 3000"
+    "start": "next start -p $PORT"
   },
   "dependencies": {
     "next": "14.2.5",
@@ -16,3 +16,4 @@
     "nodemon": "^3.1.10"
   }
 }
+
