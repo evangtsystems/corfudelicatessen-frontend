@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { getApiBase } from "../../src/lib/apiBase";
 import { getToken } from "../../src/lib/auth";
 import toast from "react-hot-toast";
+import { useCart } from "../../src/lib/cartContext";
+
 
 const theme = { primary: "#1f3b2e", accent: "#d1b76e" };
 
@@ -22,6 +24,8 @@ function ShopPageInner() {
   const query = (searchParams.get("search") || "").toLowerCase();
   const mainCategory = searchParams.get("mainCategory") || "";
   const category = searchParams.get("category") || "";
+  const { cartItems, updateCartGlobal } = useCart();
+
 
   // Load categories
   useEffect(() => {
@@ -81,41 +85,40 @@ useEffect(() => {
 }, [cart]);
 
 
-const add = (p) => {
-  let updatedCart = [];
+const add = async (p) => {
+  // Start from context cartItems (always up-to-date)
+  let cartNow = [...cartItems];
 
-  setCart((prev) => {
-    const existing = prev.find((i) => i.productId === p._id);
+  // Check if the item already exists
+  const existing = cartNow.find((i) => i.productId === p._id);
 
-    if (existing) {
-      updatedCart = prev.map((i) =>
-        i.productId === p._id
-          ? { ...i, quantity: i.quantity + 1 }
-          : i
-      );
-    } else {
-      updatedCart = [
-        ...prev,
-        {
-          productId: p._id,
-          name: p.name,
-          price: p.price,
-          quantity: 1
-        }
-      ];
-    }
+  if (existing) {
+    // Increment quantity
+    cartNow = cartNow.map((i) =>
+      i.productId === p._id
+        ? { ...i, quantity: i.quantity + 1 }
+        : i
+    );
+  } else {
+    // Add new item
+    cartNow = [
+      ...cartNow,
+      {
+        productId: p._id,
+        name: p.name,
+        price: p.price,
+        quantity: 1,
+      },
+    ];
+  }
 
-    return updatedCart;
-  });
+  // 🔥 Global cart update (localStorage + DB + context)
+  await updateCartGlobal(cartNow);
 
-  // ✔ Wait 1 tick so `updatedCart` DEFINITELY has the final value
-  setTimeout(() => {
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    window.dispatchEvent(new Event("cart-updated"));
-  }, 0);
-
+  // 🔔 Toast
   toast.success(`Added to cart: ${p.name}`, { id: "cart-toast" });
 };
+
 
 
 

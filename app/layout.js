@@ -1,6 +1,7 @@
 import Header from "../src/components/Header";
 import Footer from "../src/components/Footer";
-import { Toaster } from "react-hot-toast";   // ✅ ADD THIS
+import { Toaster } from "react-hot-toast";
+import { CartProvider } from "../src/lib/cartContext";   // ✅ ADD THIS
 
 export const metadata = { title: "Corfu Delicatessen" };
 
@@ -27,21 +28,23 @@ export default function RootLayout({ children }) {
           overflowX: "hidden",
         }}
       >
-        {/* 🔥 POPUP TOASTER MUST BE HERE */}
-        <Toaster position="bottom-center" />
+        {/* 🔥 Wrap EVERYTHING in CartProvider */}
+        <CartProvider>
+          <Toaster position="bottom-center" />
 
-        <Header />
+          <Header />
 
-        <main
-          style={{
-            flex: 1,
-            padding: "20px",
-          }}
-        >
-          {children}
-        </main>
+          <main
+            style={{
+              flex: 1,
+              padding: "20px",
+            }}
+          >
+            {children}
+          </main>
 
-        <Footer />
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

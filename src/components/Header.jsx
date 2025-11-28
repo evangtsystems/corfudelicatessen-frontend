@@ -1,81 +1,50 @@
 "use client";
+import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { getApiBase } from '../lib/apiBase';
-import { getTokenPayload, getToken, clearToken } from "../lib/auth";
-
+import { useState,useEffect } from "react";
+import { getToken, clearToken } from "../lib/auth";
+import { useCart } from "../lib/cartContext";
+import { getApiBase } from "../lib/apiBase";
 
 
 export default function Header() {
-  const loadCartSafe = () => {
-  let raw = localStorage.getItem("cart");
-  if (!raw || raw === "undefined" || raw === "null") raw = "[]";
-
-  try {
-    return JSON.parse(raw);
-  } catch (err) {
-    console.error("❌ Cart corrupted. Resetting.");
-    localStorage.setItem("cart", "[]");
-    return [];
-  }
-};
-
   const pathname = usePathname();
   const router = useRouter();
+
+  const {
+  user,
+  setUser,
+  cartItems,
+  setCartItems,
+  cartCount,
+  setCartCount,
+  updateCartGlobal,
+  clearCart,
+} = useCart();
+
+
+  // ---------------- STATE ----------------
   const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [showProducts, setShowProducts] = useState(false);
-  const [user, setUser] = useState(null);
-
-  // Load cart on mount + listen for updates
-useEffect(() => {
-  if (typeof window === "undefined") return;
-
-  const saved = loadCartSafe(); // ✅ FIX
-  setCartItems(saved);
-  setCartCount(saved.reduce((sum, x) => sum + x.quantity, 0));
-
-  const updateCart = () => {
-    const saved = loadCartSafe();
-    setCartItems(saved);
-    setCartCount(saved.reduce((sum, x) => sum + x.quantity, 0));
-  };
-
-  window.addEventListener("cart-updated", updateCart);
-  return () => window.removeEventListener("cart-updated", updateCart);
-}, []);
-
-
-  useEffect(() => {
-  const payload = getTokenPayload();
-  if (payload) {
-    setUser(payload);
-  }
-}, []);
-
-
+  
+  const [cartOpen, setCartOpen] = useState(false);
+  const [categories, setCategories] = useState({});
 
   const isActive = (path) =>
     pathname === path
-      ? { color: "#2c1810", background: "#d4a76a", borderRadius: "6px", padding: "6px 10px" }
+      ? {
+          color: "#2c1810",
+          background: "#d4a76a",
+          borderRadius: "6px",
+          padding: "6px 10px",
+        }
       : {};
 
-
-      // CART STATE
-const [cartCount, setCartCount] = useState(0);
-const [cartOpen, setCartOpen] = useState(false);
-const [cartItems, setCartItems] = useState([]);
-
-
-
-// 💥 Always refresh cart every time page changes (fixes missing updates)
-
-
-
-
-  // ✅ Debounced search
-  useEffect(() => {
+  // ---------------- EFFECTS ----------------
+  // SEARCH
+  React.useEffect(() => {
     const timeout = setTimeout(() => {
       const trimmed = search.trim();
       const params = new URLSearchParams(window.location.search);
@@ -85,21 +54,20 @@ const [cartItems, setCartItems] = useState([]);
         pathname === "/shop" ? router.replace(newUrl) : router.push(newUrl);
       } else if (pathname === "/shop" && !trimmed) {
         params.delete("search");
-        router.replace(`/shop${params.toString() ? "?" + params.toString() : ""}`);
+        router.replace(
+          `/shop${params.toString() ? "?" + params.toString() : ""}`,
+        );
       }
     }, 400);
     return () => clearTimeout(timeout);
   }, [search, pathname, router]);
 
-  const [categories, setCategories] = useState({});
-
-  
-
-
-  useEffect(() => {
+  // LOAD CATEGORIES
+  React.useEffect(() => {
     async function loadCategories() {
       try {
         const res = await fetch(`${getApiBase()}/api/categories`);
+
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         setCategories(data);
@@ -110,13 +78,30 @@ const [cartItems, setCartItems] = useState([]);
     loadCategories();
   }, []);
 
+  // 🔥 Sync header cart UI whenever cart changes anywhere
+
+
+
+  // 🔥 Update floating cart panel when cart changes anywhere
+
+
+  // ---------------- LOGOUT ----------------
+  const handleLogout = async () => {
+    clearToken();
+    await clearCart();
+    setUser(null);
+    router.push("/login");
+  };
+
+  // ---------------- RENDER ----------------
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 1000 }}>
-      {/* ✅ MAIN HEADER */}
+      {/* MAIN HEADER */}
       <header
         style={{
           width: "100%",
-          background: "linear-gradient(to right, white 0%, white 50%, #b1dd12ff 100%)",
+          background:
+            "linear-gradient(to right, white 0%, white 50%, #b1dd12ff 100%)",
           color: "white",
           padding: "12px 20px",
           display: "flex",
@@ -125,8 +110,15 @@ const [cartItems, setCartItems] = useState([]);
           boxSizing: "border-box",
         }}
       >
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
-          <img src="/assets/logo.webp" alt="Corfu Delicatessen" style={{ height: "50px", objectFit: "contain" }} />
+        <Link
+          href="/"
+          style={{ textDecoration: "none", display: "flex", alignItems: "center" }}
+        >
+          <img
+            src="/assets/logo.webp"
+            alt="Corfu Delicatessen"
+            style={{ height: "50px", objectFit: "contain" }}
+          />
         </Link>
 
         <nav
@@ -139,245 +131,231 @@ const [cartItems, setCartItems] = useState([]);
           }}
           className="desktop-nav"
         >
-          <Link href="/shop" style={{ color: "white", textDecoration: "none", ...isActive("/shop") }}>
+          <Link
+            href="/shop"
+            style={{ color: "white", textDecoration: "none", ...isActive("/shop") }}
+          >
             Shop
           </Link>
+
           {user ? (
-  <>
-    <span style={{ color: "white", fontWeight: "bold" }}>
-      {user.role === "admin" ? "Admin" : "Client"}
-    </span>
+            <>
+              <span style={{ color: "white", fontWeight: "bold" }}>
+                {user.role === "admin" ? "Admin" : "Client"}
+              </span>
 
-    <span
-      onClick={() => {
-        clearToken();
-        setUser(null);
-        router.push("/login");
-      }}
-      style={{
-        color: "white",
-        cursor: "pointer",
-        padding: "6px 10px",
-        background: "#d4a76a",
-        borderRadius: "6px",
-        fontWeight: "bold",
-      }}
-    >
-      Logout
-    </span>
-  </>
-) : (
-  <Link
-    href="/login"
-    style={{
-      color: "white",
-      textDecoration: "none",
-      ...isActive("/login"),
-      padding: "6px 10px",
-    }}
-  >
-    Login
-  </Link>
-)}
+              <span
+                onClick={handleLogout}
+                style={{
+                  color: "white",
+                  cursor: "pointer",
+                  padding: "6px 10px",
+                  background: "#d4a76a",
+                  borderRadius: "6px",
+                  fontWeight: "bold",
+                }}
+              >
+                Logout
+              </span>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              style={{
+                color: "white",
+                textDecoration: "none",
+                ...isActive("/login"),
+                padding: "6px 10px",
+              }}
+            >
+              Login
+            </Link>
+          )}
 
-          
           <span
-  onClick={() => {
-    const token = getToken();
+            onClick={() => {
+              const token = getToken();
+              if (token) {
+                window.location.href = "/admin/products";
+              } else {
+                alert("⚠️ Πρέπει πρώτα να συνδεθείτε ως διαχειριστής.");
+                window.location.href = "/login";
+              }
+            }}
+            style={{
+              color: "white",
+              textDecoration: "none",
+              fontWeight: "bold",
+              cursor: "pointer",
+              ...isActive("/admin/products"),
+            }}
+          >
+            Admin
+          </span>
 
-    if (token) {
-      window.location.href = "/admin/products";
-    } else {
-      alert("⚠️ Πρέπει πρώτα να συνδεθείτε ως διαχειριστής.");
-      window.location.href = "/login";
-    }
-  }}
-  style={{
-    color: "white",
-    textDecoration: "none",
-    fontWeight: "bold",
-    cursor: "pointer",
-    ...isActive("/admin/products"),
-  }}
->
-  Admin
-</span>
-
-{/* CART BUTTON WITH COUNTER */}
-{/* CART BUTTON WITH COUNTER — Desktop opens panel, Mobile goes to page */}
-<div
-  onClick={() => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      // Mobile → go to cart page
-      window.location.href = "/cart";
-    } else {
-      // Desktop → open floating panel
-      setCartOpen(true);
-    }
-  }}
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    cursor: "pointer",
-    padding: "6px 10px",
-    color: "white",
-    fontWeight: "bold",
-    position: "relative"
-  }}
->
-  {/* ICON WRAPPER — controls badge position */}
-  <div style={{ position: "relative", width: "24px", height: "24px" }}>
-    <span style={{ fontSize: "1.4rem", lineHeight: "24px" }}>🛒</span>
-
-    {cartCount > 0 && (
-      <div
-        style={{
-          position: "absolute",
-          top: "-12px",     // ← higher bubble
-          right: "-6px",
-          background: "#d1b76e",
-          color: "#1f3b2e",
-          padding: "2px 6px",
-          borderRadius: "50%",
-          fontSize: "0.7rem",
-          fontWeight: "bold",
-          minWidth: "18px",
-          height: "18px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {cartCount}
-      </div>
-    )}
-  </div>
-
-  <span>Cart</span>
-</div>
-
-
+          {/* CART BUTTON */}
+          <div
+            onClick={() => {
+              if (typeof window !== "undefined" && window.innerWidth < 768) {
+                window.location.href = "/cart";
+              } else {
+                setCartOpen(true);
+              }
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              cursor: "pointer",
+              padding: "6px 10px",
+              color: "white",
+              fontWeight: "bold",
+              position: "relative",
+            }}
+          >
+            <div style={{ position: "relative", width: "24px", height: "24px" }}>
+              <span style={{ fontSize: "1.4rem", lineHeight: "24px" }}>🛒</span>
+              {cartCount > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "-12px",
+                    right: "-6px",
+                    background: "#d1b76e",
+                    color: "#1f3b2e",
+                    padding: "2px 6px",
+                    borderRadius: "50%",
+                    fontSize: "0.7rem",
+                    fontWeight: "bold",
+                    minWidth: "18px",
+                    height: "18px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {cartCount}
+                </div>
+              )}
+            </div>
+            <span>Cart</span>
+          </div>
         </nav>
 
-        <div onClick={() => setMenuOpen(!menuOpen)} style={{ fontSize: "1.5rem", cursor: "pointer", display: "none" }} className="mobile-toggle">
+        {/* MOBILE TOGGLE */}
+        <div
+          onClick={() => setMenuOpen(!menuOpen)}
+          style={{ fontSize: "1.5rem", cursor: "pointer", display: "none" }}
+          className="mobile-toggle"
+        >
           ☰
         </div>
 
-     {menuOpen && (
-  <div
-    style={{
-      position: "absolute",
-      top: "60px",
-      right: "20px",
-      background: "#2c1810",
-      border: "1px solid #d4a76a",
-      borderRadius: "8px",
-      padding: "10px 0",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "flex-start",
-      width: "160px",
-      zIndex: 999999,
-    }}
-  >
-    {/* ALWAYS SHOW SHOP */}
-    <Link
-      href="/shop"
-      style={{
-        color: "white",
-        textDecoration: "none",
-        width: "100%",
-        padding: "10px 20px",
-        fontWeight: "bold",
-      }}
-      onClick={() => setMenuOpen(false)}
-    >
-      Shop
-    </Link>
+        {/* MOBILE DROPDOWN */}
+        {menuOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "60px",
+              right: "20px",
+              background: "#2c1810",
+              border: "1px solid #d4a76a",
+              borderRadius: "8px",
+              padding: "10px 0",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              width: "160px",
+              zIndex: 999999,
+            }}
+          >
+            <Link
+              href="/shop"
+              style={{
+                color: "white",
+                textDecoration: "none",
+                width: "100%",
+                padding: "10px 20px",
+                fontWeight: "bold",
+              }}
+              onClick={() => setMenuOpen(false)}
+            >
+              Shop
+            </Link>
 
-    {/* SHOW LOGIN WHEN LOGGED OUT */}
-    {!user && (
-      <Link
-        href="/login"
-        style={{
-          color: "white",
-          textDecoration: "none",
-          width: "100%",
-          padding: "10px 20px",
-          fontWeight: "bold",
-        }}
-        onClick={() => setMenuOpen(false)}
-      >
-        Login
-      </Link>
-    )}
+            {!user && (
+              <Link
+                href="/login"
+                style={{
+                  color: "white",
+                  textDecoration: "none",
+                  width: "100%",
+                  padding: "10px 20px",
+                  fontWeight: "bold",
+                }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Login
+              </Link>
+            )}
 
-    {/* SHOW LOGOUT WHEN LOGGED IN */}
-    {user && (
-      <div
-        style={{
-          width: "100%",
-          padding: "10px 20px",
-          color: "white",
-          cursor: "pointer",
-          fontWeight: "bold",
-        }}
-        onClick={() => {
-          clearToken();
-          setUser(null);
-          setMenuOpen(false);
-          router.push("/login");
-        }}
-      >
-        Logout
-      </div>
-    )}
+            {user && (
+              <div
+                style={{
+                  width: "100%",
+                  padding: "10px 20px",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+                onClick={() => {
+                  setMenuOpen(false);
+                  handleLogout();
+                }}
+              >
+                Logout
+              </div>
+            )}
 
-    {/* CART (SPECIAL HANDLING) */}
-    <div
-      style={{
-        width: "100%",
-        padding: "10px 20px",
-        color: "white",
-        cursor: "pointer",
-        fontWeight: "bold",
-        display: "flex",
-        gap: "10px",
-      }}
-      onClick={() => {
-        setMenuOpen(false);
-        if (window.innerWidth < 768) {
-          window.location.href = "/cart";
-        } else {
-          setCartOpen(true);
-        }
-      }}
-    >
-      🛒 Cart
-    </div>
+            <div
+              style={{
+                width: "100%",
+                padding: "10px 20px",
+                color: "white",
+                cursor: "pointer",
+                fontWeight: "bold",
+                display: "flex",
+                gap: "10px",
+              }}
+              onClick={() => {
+                setMenuOpen(false);
+                if (window.innerWidth < 768) {
+                  window.location.href = "/cart";
+                } else {
+                  setCartOpen(true);
+                }
+              }}
+            >
+              🛒 Cart
+            </div>
 
-    {/* ADMIN (ONLY FOR ADMINS) */}
-    {user?.role === "admin" && (
-      <Link
-        href="/admin/products"
-        style={{
-          color: "white",
-          textDecoration: "none",
-          width: "100%",
-          padding: "10px 20px",
-          fontWeight: "bold",
-        }}
-        onClick={() => setMenuOpen(false)}
-      >
-        Admin
-      </Link>
-    )}
-  </div>
-)}
-
-
-
+            {user?.role === "admin" && (
+              <Link
+                href="/admin/products"
+                style={{
+                  color: "white",
+                  textDecoration: "none",
+                  width: "100%",
+                  padding: "10px 20px",
+                  fontWeight: "bold",
+                }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Admin
+              </Link>
+            )}
+          </div>
+        )}
       </header>
 
       {/* ✅ SECONDARY HEADER */}
@@ -659,30 +637,16 @@ const [cartItems, setCartItems] = useState([]);
               >
                 <button
                   onClick={() => {
-                    let raw = localStorage.getItem("cart");
+  const updated = cartItems.map((i) =>
+    i.productId === item.productId
+      ? { ...i, quantity: Math.max(1, i.quantity - 1) }
+      : i
+  );
 
-if (!raw || raw === "undefined" || raw === "null") {
-  raw = "[]";
-}
+  updateCartGlobal(updated, user, getApiBase, getToken);
+}}
 
-let saved = [];
-try {
-  saved = JSON.parse(raw);
-} catch (err) {
-  console.error("Cart corrupted, resetting:", err);
-  saved = [];
-  localStorage.setItem("cart", "[]");
-}
-
-                    const updated = saved
-                      .map((i) =>
-                        i.productId === item.productId
-                          ? { ...i, quantity: Math.max(1, i.quantity - 1) }
-                          : i
-                      );
-                    localStorage.setItem("cart", JSON.stringify(updated));
-                    window.dispatchEvent(new Event("cart-updated"));
-                  }}
+                  
                   style={{
                     width: "26px",
                     height: "26px",
@@ -699,29 +663,15 @@ try {
 
                 <button
                   onClick={() => {
-                    let raw = localStorage.getItem("cart");
+  const updated = cartItems.map((i) =>
+    i.productId === item.productId
+      ? { ...i, quantity: i.quantity + 1 }
+      : i
+  );
 
-if (!raw || raw === "undefined" || raw === "null") {
-  raw = "[]";
-}
+  updateCartGlobal(updated, user, getApiBase, getToken);
+}}
 
-let saved = [];
-try {
-  saved = JSON.parse(raw);
-} catch (err) {
-  console.error("Cart corrupted, resetting:", err);
-  saved = [];
-  localStorage.setItem("cart", "[]");
-}
-
-                    const updated = saved.map((i) =>
-                      i.productId === item.productId
-                        ? { ...i, quantity: i.quantity + 1 }
-                        : i
-                    );
-                    localStorage.setItem("cart", JSON.stringify(updated));
-                    window.dispatchEvent(new Event("cart-updated"));
-                  }}
                   style={{
                     width: "26px",
                     height: "26px",
