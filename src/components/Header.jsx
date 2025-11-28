@@ -3,19 +3,76 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { getApiBase } from '../lib/apiBase';
+import { getTokenPayload, getToken, clearToken } from "../lib/auth";
+
 
 
 export default function Header() {
+  const loadCartSafe = () => {
+  let raw = localStorage.getItem("cart");
+  if (!raw || raw === "undefined" || raw === "null") raw = "[]";
+
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error("❌ Cart corrupted. Resetting.");
+    localStorage.setItem("cart", "[]");
+    return [];
+  }
+};
+
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [showProducts, setShowProducts] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // Load cart on mount + listen for updates
+useEffect(() => {
+  if (typeof window === "undefined") return;
+
+  const saved = loadCartSafe(); // ✅ FIX
+  setCartItems(saved);
+  setCartCount(saved.reduce((sum, x) => sum + x.quantity, 0));
+
+  const updateCart = () => {
+    const saved = loadCartSafe();
+    setCartItems(saved);
+    setCartCount(saved.reduce((sum, x) => sum + x.quantity, 0));
+  };
+
+  window.addEventListener("cart-updated", updateCart);
+  return () => window.removeEventListener("cart-updated", updateCart);
+}, []);
+
+
+  useEffect(() => {
+  const payload = getTokenPayload();
+  if (payload) {
+    setUser(payload);
+  }
+}, []);
+
+
 
   const isActive = (path) =>
     pathname === path
       ? { color: "#2c1810", background: "#d4a76a", borderRadius: "6px", padding: "6px 10px" }
       : {};
+
+
+      // CART STATE
+const [cartCount, setCartCount] = useState(0);
+const [cartOpen, setCartOpen] = useState(false);
+const [cartItems, setCartItems] = useState([]);
+
+
+
+// 💥 Always refresh cart every time page changes (fixes missing updates)
+
+
+
 
   // ✅ Debounced search
   useEffect(() => {
@@ -35,6 +92,9 @@ export default function Header() {
   }, [search, pathname, router]);
 
   const [categories, setCategories] = useState({});
+
+  
+
 
   useEffect(() => {
     async function loadCategories() {
@@ -82,24 +142,49 @@ export default function Header() {
           <Link href="/shop" style={{ color: "white", textDecoration: "none", ...isActive("/shop") }}>
             Shop
           </Link>
-          <Link href="/login" style={{ color: "white", textDecoration: "none", ...isActive("/login") }}>
-            Login
-          </Link>
-          <Link
-            href="/cart"
-            style={{
-              color: "white",
-              textDecoration: "none",
-              ...isActive("/cart"),
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            🛒 <span style={{ marginLeft: "5px" }}>Cart</span>
-          </Link>
+          {user ? (
+  <>
+    <span style={{ color: "white", fontWeight: "bold" }}>
+      {user.role === "admin" ? "Admin" : "Client"}
+    </span>
+
+    <span
+      onClick={() => {
+        clearToken();
+        setUser(null);
+        router.push("/login");
+      }}
+      style={{
+        color: "white",
+        cursor: "pointer",
+        padding: "6px 10px",
+        background: "#d4a76a",
+        borderRadius: "6px",
+        fontWeight: "bold",
+      }}
+    >
+      Logout
+    </span>
+  </>
+) : (
+  <Link
+    href="/login"
+    style={{
+      color: "white",
+      textDecoration: "none",
+      ...isActive("/login"),
+      padding: "6px 10px",
+    }}
+  >
+    Login
+  </Link>
+)}
+
+          
           <span
   onClick={() => {
-    const token = localStorage.getItem("token");
+    const token = getToken();
+
     if (token) {
       window.location.href = "/admin/products";
     } else {
@@ -118,40 +203,181 @@ export default function Header() {
   Admin
 </span>
 
+{/* CART BUTTON WITH COUNTER */}
+{/* CART BUTTON WITH COUNTER — Desktop opens panel, Mobile goes to page */}
+<div
+  onClick={() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      // Mobile → go to cart page
+      window.location.href = "/cart";
+    } else {
+      // Desktop → open floating panel
+      setCartOpen(true);
+    }
+  }}
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    cursor: "pointer",
+    padding: "6px 10px",
+    color: "white",
+    fontWeight: "bold",
+    position: "relative"
+  }}
+>
+  {/* ICON WRAPPER — controls badge position */}
+  <div style={{ position: "relative", width: "24px", height: "24px" }}>
+    <span style={{ fontSize: "1.4rem", lineHeight: "24px" }}>🛒</span>
+
+    {cartCount > 0 && (
+      <div
+        style={{
+          position: "absolute",
+          top: "-12px",     // ← higher bubble
+          right: "-6px",
+          background: "#d1b76e",
+          color: "#1f3b2e",
+          padding: "2px 6px",
+          borderRadius: "50%",
+          fontSize: "0.7rem",
+          fontWeight: "bold",
+          minWidth: "18px",
+          height: "18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {cartCount}
+      </div>
+    )}
+  </div>
+
+  <span>Cart</span>
+</div>
+
+
         </nav>
 
         <div onClick={() => setMenuOpen(!menuOpen)} style={{ fontSize: "1.5rem", cursor: "pointer", display: "none" }} className="mobile-toggle">
           ☰
         </div>
 
-        {menuOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: "60px",
-              right: "20px",
-              background: "#2c1810",
-              border: "1px solid #d4a76a",
-              borderRadius: "8px",
-              padding: "10px 0",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              width: "160px",
-            }}
-          >
-            {["shop", "login", "cart", "admin/products"].map((p) => (
-              <Link
-                key={p}
-                href={`/${p}`}
-                style={{ color: "white", textDecoration: "none", width: "100%", padding: "10px 20px" }}
-                onClick={() => setMenuOpen(false)}
-              >
-                {p === "cart" ? "🛒 Cart" : p === "admin/products" ? "Admin" : p.charAt(0).toUpperCase() + p.slice(1)}
-              </Link>
-            ))}
-          </div>
-        )}
+     {menuOpen && (
+  <div
+    style={{
+      position: "absolute",
+      top: "60px",
+      right: "20px",
+      background: "#2c1810",
+      border: "1px solid #d4a76a",
+      borderRadius: "8px",
+      padding: "10px 0",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-start",
+      width: "160px",
+      zIndex: 999999,
+    }}
+  >
+    {/* ALWAYS SHOW SHOP */}
+    <Link
+      href="/shop"
+      style={{
+        color: "white",
+        textDecoration: "none",
+        width: "100%",
+        padding: "10px 20px",
+        fontWeight: "bold",
+      }}
+      onClick={() => setMenuOpen(false)}
+    >
+      Shop
+    </Link>
+
+    {/* SHOW LOGIN WHEN LOGGED OUT */}
+    {!user && (
+      <Link
+        href="/login"
+        style={{
+          color: "white",
+          textDecoration: "none",
+          width: "100%",
+          padding: "10px 20px",
+          fontWeight: "bold",
+        }}
+        onClick={() => setMenuOpen(false)}
+      >
+        Login
+      </Link>
+    )}
+
+    {/* SHOW LOGOUT WHEN LOGGED IN */}
+    {user && (
+      <div
+        style={{
+          width: "100%",
+          padding: "10px 20px",
+          color: "white",
+          cursor: "pointer",
+          fontWeight: "bold",
+        }}
+        onClick={() => {
+          clearToken();
+          setUser(null);
+          setMenuOpen(false);
+          router.push("/login");
+        }}
+      >
+        Logout
+      </div>
+    )}
+
+    {/* CART (SPECIAL HANDLING) */}
+    <div
+      style={{
+        width: "100%",
+        padding: "10px 20px",
+        color: "white",
+        cursor: "pointer",
+        fontWeight: "bold",
+        display: "flex",
+        gap: "10px",
+      }}
+      onClick={() => {
+        setMenuOpen(false);
+        if (window.innerWidth < 768) {
+          window.location.href = "/cart";
+        } else {
+          setCartOpen(true);
+        }
+      }}
+    >
+      🛒 Cart
+    </div>
+
+    {/* ADMIN (ONLY FOR ADMINS) */}
+    {user?.role === "admin" && (
+      <Link
+        href="/admin/products"
+        style={{
+          color: "white",
+          textDecoration: "none",
+          width: "100%",
+          padding: "10px 20px",
+          fontWeight: "bold",
+        }}
+        onClick={() => setMenuOpen(false)}
+      >
+        Admin
+      </Link>
+    )}
+  </div>
+)}
+
+
+
       </header>
 
       {/* ✅ SECONDARY HEADER */}
@@ -327,6 +553,222 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* FLOATING CART PANEL */}
+{cartOpen && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      right: 0,
+      width: "90vw",
+      maxWidth: "380px",
+      height: "100vh",
+      background: "white",
+      boxShadow: "-4px 0 15px rgba(0,0,0,0.25)",
+      zIndex: 999999,
+      display: "flex",
+      flexDirection: "column",
+      borderLeft: "4px solid #d1b76e",
+    }}
+  >
+    {/* Close Button */}
+    <button
+      onClick={() => setCartOpen(false)}
+      style={{
+        position: "absolute",
+        top: 12,
+        right: 12,
+        fontSize: "22px",
+        cursor: "pointer",
+        background: "none",
+        border: "none",
+      }}
+    >
+      ✕
+    </button>
+
+    {/* Title */}
+    <h2
+      style={{
+        margin: 0,
+        padding: "20px",
+        borderBottom: "1px solid #eee",
+        fontSize: "1.3rem",
+        fontWeight: "bold",
+        color: "#1f3b2e",
+      }}
+    >
+      Your Cart
+    </h2>
+
+    {/* Items */}
+    <div style={{ flex: 1, overflowY: "auto", padding: "15px" }}>
+      {cartItems.length === 0 ? (
+        <p style={{ textAlign: "center", marginTop: "40px", color: "#555" }}>
+          Your cart is empty.
+        </p>
+      ) : (
+        cartItems.map((item) => (
+          <div
+            key={item.productId}
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginBottom: "15px",
+              paddingBottom: "15px",
+              borderBottom: "1px solid #eee",
+            }}
+          >
+            {/* Image placeholder */}
+            <div
+              style={{
+                width: "70px",
+                height: "70px",
+                borderRadius: "8px",
+                background: "#f4f4f4",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                fontSize: "12px",
+                color: "#999",
+              }}
+            >
+              IMG
+            </div>
+
+            {/* Info */}
+            <div style={{ flex: 1 }}>
+              <strong style={{ fontSize: "0.95rem" }}>{item.name}</strong>
+
+              <div style={{ marginTop: 6, color: "#444" }}>
+                Price:{" "}
+                <span style={{ fontWeight: "bold", color: "#1f3b2e" }}>
+                  {item.price}
+                </span>
+              </div>
+
+              {/* Quantity Controls */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginTop: "8px",
+                  gap: "8px",
+                }}
+              >
+                <button
+                  onClick={() => {
+                    let raw = localStorage.getItem("cart");
+
+if (!raw || raw === "undefined" || raw === "null") {
+  raw = "[]";
+}
+
+let saved = [];
+try {
+  saved = JSON.parse(raw);
+} catch (err) {
+  console.error("Cart corrupted, resetting:", err);
+  saved = [];
+  localStorage.setItem("cart", "[]");
+}
+
+                    const updated = saved
+                      .map((i) =>
+                        i.productId === item.productId
+                          ? { ...i, quantity: Math.max(1, i.quantity - 1) }
+                          : i
+                      );
+                    localStorage.setItem("cart", JSON.stringify(updated));
+                    window.dispatchEvent(new Event("cart-updated"));
+                  }}
+                  style={{
+                    width: "26px",
+                    height: "26px",
+                    borderRadius: "50%",
+                    border: "1px solid #ccc",
+                    background: "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  -
+                </button>
+
+                <span style={{ fontWeight: "bold" }}>{item.quantity}</span>
+
+                <button
+                  onClick={() => {
+                    let raw = localStorage.getItem("cart");
+
+if (!raw || raw === "undefined" || raw === "null") {
+  raw = "[]";
+}
+
+let saved = [];
+try {
+  saved = JSON.parse(raw);
+} catch (err) {
+  console.error("Cart corrupted, resetting:", err);
+  saved = [];
+  localStorage.setItem("cart", "[]");
+}
+
+                    const updated = saved.map((i) =>
+                      i.productId === item.productId
+                        ? { ...i, quantity: i.quantity + 1 }
+                        : i
+                    );
+                    localStorage.setItem("cart", JSON.stringify(updated));
+                    window.dispatchEvent(new Event("cart-updated"));
+                  }}
+                  style={{
+                    width: "26px",
+                    height: "26px",
+                    borderRadius: "50%",
+                    border: "1px solid #ccc",
+                    background: "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+
+    {/* Checkout button */}
+    <div
+      style={{
+        padding: "15px",
+        borderTop: "1px solid #eee",
+        background: "white",
+      }}
+    >
+      <button
+        onClick={() => (window.location.href = "/checkout")}
+        style={{
+          width: "100%",
+          padding: "14px",
+          background: "#d1b76e",
+          color: "#1f3b2e",
+          border: "none",
+          borderRadius: "6px",
+          fontWeight: "bold",
+          fontSize: "1rem",
+          cursor: "pointer",
+        }}
+      >
+        Go to Checkout →
+      </button>
+    </div>
+  </div>
+)}
+
+
 
       <style jsx>{`
         @media (max-width: 768px) {

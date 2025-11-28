@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getApiBase } from "../../src/lib/apiBase";
 import { getToken } from "../../src/lib/auth";
+import toast from "react-hot-toast";
 
 const theme = { primary: "#1f3b2e", accent: "#d1b76e" };
 
@@ -30,6 +31,21 @@ function ShopPageInner() {
       .catch(console.error);
   }, []);
 
+
+  // Load user on first render
+useEffect(() => {
+  const token = getToken();
+  if (!token) return;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    console.log("Payload:", payload);  // ← debug
+    setUser({ approved: !!payload.approved, role: payload.role });
+  } catch (err) {
+    console.error("Token decode failed", err);
+  }
+}, []);
+
   // Fetch products + decode user
   useEffect(() => {
     const params = new URLSearchParams();
@@ -51,19 +67,59 @@ function ShopPageInner() {
     }
   }, [mainCategory, category]);
 
-  const add = (p) => {
-    setCart((prev) => {
-      const ex = prev.find((i) => i.productId === p._id);
-      if (ex)
-        return prev.map((i) =>
-          i.productId === p._id ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      return [
+  // Load cart on first render
+useEffect(() => {
+  const saved = localStorage.getItem("cart");
+  if (saved) {
+    setCart(JSON.parse(saved));
+  }
+}, []);
+
+// Save cart whenever it changes
+useEffect(() => {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}, [cart]);
+
+
+const add = (p) => {
+  let updatedCart = [];
+
+  setCart((prev) => {
+    const existing = prev.find((i) => i.productId === p._id);
+
+    if (existing) {
+      updatedCart = prev.map((i) =>
+        i.productId === p._id
+          ? { ...i, quantity: i.quantity + 1 }
+          : i
+      );
+    } else {
+      updatedCart = [
         ...prev,
-        { productId: p._id, name: p.name, price: p.price, quantity: 1 },
+        {
+          productId: p._id,
+          name: p.name,
+          price: p.price,
+          quantity: 1
+        }
       ];
-    });
-  };
+    }
+
+    return updatedCart;
+  });
+
+  // ✔ Wait 1 tick so `updatedCart` DEFINITELY has the final value
+  setTimeout(() => {
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    window.dispatchEvent(new Event("cart-updated"));
+  }, 0);
+
+  toast.success(`Added to cart: ${p.name}`, { id: "cart-toast" });
+};
+
+
+
+
 
   const priceCell = (p) =>
     user.approved ? (

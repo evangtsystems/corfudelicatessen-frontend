@@ -1,5 +1,6 @@
 import Header from "../src/components/Header";
 import Footer from "../src/components/Footer";
+import { Toaster } from "react-hot-toast";   // ✅ ADD THIS
 
 export const metadata = { title: "Corfu Delicatessen" };
 
@@ -11,7 +12,7 @@ export default function RootLayout({ children }) {
         margin: 0,
         padding: 0,
         height: "100%",
-        overflowX: "hidden", // ✅ prevents horizontal scrollbar
+        overflowX: "hidden",
       }}
     >
       <body
@@ -23,10 +24,14 @@ export default function RootLayout({ children }) {
           padding: 0,
           fontFamily: "Arial, sans-serif",
           background: "#f8f5f0",
-          overflowX: "hidden", // ✅ no side scroll or bottom bar
+          overflowX: "hidden",
         }}
       >
+        {/* 🔥 POPUP TOASTER MUST BE HERE */}
+        <Toaster position="bottom-center" />
+
         <Header />
+
         <main
           style={{
             flex: 1,
@@ -35,9 +40,9 @@ export default function RootLayout({ children }) {
         >
           {children}
         </main>
+
         <Footer />
       </body>
     </html>
   );
 }
-
