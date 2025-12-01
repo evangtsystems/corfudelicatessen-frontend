@@ -6,6 +6,7 @@ import { setToken } from "../../src/lib/auth";
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [msg, setMsg] = useState("");
+  const [error, setError] = useState(null); // <-- added
 
   const submit = async (e) => {
     e.preventDefault();
@@ -21,8 +22,8 @@ export default function LoginPage() {
       if (data.success) {
         setToken(data.token);
         setMsg("✅ Success! Redirecting...");
+        setError(null);
 
-        // ✅ Safe redirect (after hydration)
         setTimeout(() => {
           if (data.user.role === "admin") {
             window.location.href = "/admin/products";
@@ -32,12 +33,28 @@ export default function LoginPage() {
         }, 400);
       } else {
         setMsg(data.message || "❌ Login failed");
+        setError(data); // <-- store backend error
       }
     } catch (err) {
       console.error("Login error:", err);
       setMsg("❌ Something went wrong");
     }
   };
+
+  async function resendVerification(email) {
+    try {
+      const res = await fetch(`${getApiBase()}/api/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      setMsg(data.message);
+    } catch {
+      setMsg("❌ Σφάλμα αποστολής νέου συνδέσμου.");
+    }
+  }
 
   return (
     <div
@@ -51,6 +68,7 @@ export default function LoginPage() {
       }}
     >
       <h1 style={{ marginTop: 0, color: "#1f3b2e" }}>Σύνδεση</h1>
+
       <form onSubmit={submit} style={{ display: "grid", gap: 12 }}>
         <input
           type="email"
@@ -64,6 +82,7 @@ export default function LoginPage() {
           }}
           required
         />
+
         <input
           type="password"
           placeholder="Password"
@@ -76,6 +95,7 @@ export default function LoginPage() {
           }}
           required
         />
+
         <button
           type="submit"
           style={{
@@ -91,7 +111,28 @@ export default function LoginPage() {
           Login
         </button>
       </form>
+
       {msg && <p style={{ marginTop: 12, textAlign: "center" }}>{msg}</p>}
+
+      {error?.unverified && (
+        <div style={{ textAlign: "center", marginTop: 12 }}>
+          <button
+            onClick={() => resendVerification(error.email)}
+            style={{
+              padding: "10px 14px",
+              border: "none",
+              borderRadius: 8,
+              background: "#1f3b2e",
+              color: "#fff",
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            Στείλε νέο σύνδεσμο επιβεβαίωσης
+          </button>
+        </div>
+      )}
+
       <p style={{ marginTop: 8, textAlign: "center" }}>
         <a href="/register" style={{ color: "#1f3b2e" }}>
           Create an account
@@ -100,4 +141,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
