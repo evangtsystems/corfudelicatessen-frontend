@@ -1,49 +1,30 @@
 import Header from "../src/components/Header";
 import Footer from "../src/components/Footer";
-import { Toaster } from "react-hot-toast";
-import { CartProvider } from "../src/lib/cartContext";   // ✅ ADD THIS
+import { CartProvider } from "../src/lib/cartContext";
+import ClientWrapper from "./client-wrapper"; // ⭐ NEW
 
-export const metadata = { title: "Corfu Delicatessen" };
+
+export const metadata = {
+  title: "Corfu Delicatessen",
+};
 
 export default function RootLayout({ children }) {
   return (
-    <html
-      lang="en"
-      style={{
-        margin: 0,
-        padding: 0,
-        height: "100%",
-        overflowX: "hidden",
-      }}
-    >
+    <html lang="en">
       <body
         style={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: "100vh",
           margin: 0,
           padding: 0,
-          fontFamily: "Arial, sans-serif",
+          minHeight: "100vh",
           background: "#f8f5f0",
           overflowX: "hidden",
         }}
       >
-        {/* 🔥 Wrap EVERYTHING in CartProvider */}
         <CartProvider>
-          <Toaster position="bottom-center" />
-
-          <Header />
-
-          <main
-            style={{
-              flex: 1,
-              padding: "20px",
-            }}
-          >
+          {/* All client-side logic is handled inside ClientWrapper */}
+          <ClientWrapper>
             {children}
-          </main>
-
-          <Footer />
+          </ClientWrapper>
         </CartProvider>
       </body>
     </html>
