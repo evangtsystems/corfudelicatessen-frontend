@@ -1,8 +1,5 @@
-import Header from "../src/components/Header";
-import Footer from "../src/components/Footer";
 import { CartProvider } from "../src/lib/cartContext";
-import ClientWrapper from "./client-wrapper"; // ⭐ NEW
-
+import ClientWrapper from "./client-wrapper";
 
 export const metadata = {
   title: "Corfu Delicatessen",
@@ -21,7 +18,6 @@ export default function RootLayout({ children }) {
         }}
       >
         <CartProvider>
-          {/* All client-side logic is handled inside ClientWrapper */}
           <ClientWrapper>
             {children}
           </ClientWrapper>

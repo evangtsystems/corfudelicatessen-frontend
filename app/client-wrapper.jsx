@@ -1,9 +1,9 @@
 "use client";
 
-import { Toaster } from "react-hot-toast";
+import { usePathname } from "next/navigation";
 import Header from "../src/components/Header";
 import Footer from "../src/components/Footer";
-import { usePathname } from "next/navigation";
+import { Toaster } from "react-hot-toast";
 
 export default function ClientWrapper({ children }) {
   const pathname = usePathname();
@@ -11,15 +11,17 @@ export default function ClientWrapper({ children }) {
 
   return (
     <>
-      {/* Toaster ONLY outside admin */}
-      {!isAdmin && <Toaster position="bottom-center" />}
+      {/* HEADER ALWAYS VISIBLE */}
+      <Header />
 
-      {!isAdmin && <Header />}
+      {/* Toaster ONLY for public pages (bottom) */}
+      {!isAdmin && <Toaster position="bottom-center" />}
 
       <main style={{ flex: 1, padding: 20 }}>
         {children}
       </main>
 
+      {/* FOOTER ONLY ON PUBLIC PAGES */}
       {!isAdmin && <Footer />}
     </>
   );
