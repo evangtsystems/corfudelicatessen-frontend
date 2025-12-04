@@ -509,19 +509,14 @@ useEffect(() => {
   return (
   <>
     <Toaster
+  position="top-center"
+  containerClassName="custom-toast-container"
   toastOptions={{
-    duration: 5000, // 🔥 stays for 5 seconds
-    className: "__toast",
-  }}
-  containerStyle={{
-    position: "fixed",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    zIndex: 999999,
-    pointerEvents: "none",
+    className: "custom-toast",
+    duration: 5000,
   }}
 />
+
 
 
 
@@ -1116,7 +1111,8 @@ useEffect(() => {
 `}</style>   {/* ✅ NOW VALID LOCATION */}
 
 <style jsx global>{`
-  .admin-products-page .__toast-container {
+  /* Center the toast container */
+  .custom-toast-container {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
@@ -1125,21 +1121,18 @@ useEffect(() => {
     pointer-events: none !important;
   }
 
-  .admin-products-page .__toast {
-    background: #fff !important;
-    color: #333 !important;
-    padding: 14px 22px !important;
+  /* Style the toast itself */
+  .custom-toast {
+    background: white !important;
+    color: #222 !important;
+    padding: 16px 24px !important;
     border-radius: 12px !important;
     font-size: 16px !important;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.3) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
     pointer-events: all !important;
   }
-
-  .admin-products-page @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
 `}</style>
+
 
 </>
 );
