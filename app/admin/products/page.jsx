@@ -1,13 +1,38 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import { getApiBase } from "../../../src/lib/apiBase";
 import { getToken } from "../../../src/lib/auth";
+import { VariableSizeList as List } from "react-window";
+import DeleteModal from "../../../src/components/DeleteModal";
+import toast, { Toaster } from "react-hot-toast";
+
+
+
+
 
 const theme = { primary: "#1f3b2e", accent: "#d1b76e" };
 
+
 export default function AdminProductsPage() {
+
+  
   const [hydrated, setHydrated] = useState(false);
   const [products, setProducts] = useState([]);
+  const heightCache = useRef({});
+const listRef = useRef();
+const setRowHeight = (index, size) => {
+  if (heightCache.current[index] !== size) {
+    heightCache.current[index] = size;
+    if (listRef.current) {
+      listRef.current.resetAfterIndex(index);
+    }
+  }
+};
+
+const [loading, setLoading] = useState(false);
+
+
+
 
   const [form, setForm] = useState({
     name: "",
@@ -15,22 +40,164 @@ export default function AdminProductsPage() {
     mainCategory: "",
     category: "",
     href: "",
-    img: "",
     price: "",
-  });
+    imageFile: null,
+});
+const [visibleCount, setVisibleCount] = useState(60); // show 60 items first
+
+const [deleteTarget, setDeleteTarget] = useState(null);
+
+
 
   const [msg, setMsg] = useState("");
   const [editingId, setEditingId] = useState(null);
+  // Prevent UI freeze by delaying heavy grid rendering
+const [ready, setReady] = useState(false);
+
+useEffect(() => {
+  setTimeout(() => setReady(true), 50);
+}, []);
+
+  
+
+  
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
     mainCategory: "",
     category: "",
     href: "",
-    img: "",
     imageUrl: "",
     price: "",
-  });
+    imageFile: null,
+});
+ const ProductRow = ({ index, style, data }) => {
+  const p = data[index];
+  const rowRef = useRef(null);
+  const imageSrc = p.imageUrl || p.img || null;
+
+ useEffect(() => {
+  if (rowRef.current) {
+    const height = rowRef.current.getBoundingClientRect().height;
+    setRowHeight(index, height);
+  }
+}, [index, data]);
+
+
+  return (
+    <div ref={rowRef} style={{ ...style, padding: "12px 10px" }}>
+      <div
+  key={p._id}
+  style={{
+    background: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+    minHeight: 280,   // ✅ NEW: consistent card height
+    boxSizing: "border-box",
+  }}
+>
+
+        {/* IMAGE */}
+        {/* IMAGE */}
+<div
+  style={{
+    width: "100%",
+    height: 120,
+    background: "#f4f4f4",
+    borderRadius: 10,
+    overflow: "hidden",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  }}
+>
+  {p.imageUrl || p.img ? (
+    <img
+      src={p.imageUrl || p.img}
+      alt={p.name}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+      }}
+    />
+  ) : (
+    <span style={{ color: "#999" }}>No Image</span>
+  )}
+</div>
+
+
+        {/* TITLE */}
+        <h3 style={{ margin: 0, fontSize: 18, fontWeight: "600" }}>
+          {p.name}
+        </h3>
+
+        {/* CATEGORY */}
+        <div style={{ fontSize: 14, color: "#666" }}>
+          <strong>{p.mainCategory}</strong>
+          {p.category ? ` · ${p.category}` : ""}
+        </div>
+
+        {/* DESCRIPTION */}
+        <div style={{ fontSize: 14, color: "#444" }}>{p.description}</div>
+
+        {/* PRICE */}
+        <div style={{ fontWeight: "bold", fontSize: 16 }}>
+          {p.price ? `€ ${Number(p.price).toFixed(2)}` : "—"}
+        </div>
+
+        {/* BUTTONS */}
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            marginTop: 6,
+          }}
+        >
+          <button
+            onClick={() => {
+              window.scrollTo({ top: 0 });
+              setTimeout(() => startEdit(p), 1);
+            }}
+            style={{
+              flex: 1,
+              padding: "10px",
+              background: "#e8e1cc",
+              borderRadius: 8,
+              fontWeight: "bold",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Edit
+          </button>
+
+          <button
+            onClick={() => del(p._id)}
+            style={{
+              flex: 1,
+              padding: "10px",
+              background: "#c62828",
+              borderRadius: 8,
+              fontWeight: "bold",
+              color: "#fff",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
   // categories from backend /api/categories
   const [categoriesTree, setCategoriesTree] = useState(null);
@@ -45,8 +212,9 @@ export default function AdminProductsPage() {
   const loadProducts = async () => {
     try {
       const res = await fetch(`${getApiBase()}/api/products`);
-      const data = await res.json();
-      if (data.success) setProducts(data.products);
+const data = await res.json();
+if (data.success) setProducts(data.products || []);
+
     } catch (err) {
       console.error("Error loading products:", err);
     }
@@ -74,53 +242,88 @@ export default function AdminProductsPage() {
     loadCategories();
   }, [hydrated]);
 
-  const save = async (e) => {
-    e.preventDefault();
-    setMsg("");
-
-    const image = form.img;
-    const body = {
-      name: form.name,
-      description: form.description,
-      mainCategory: form.mainCategory,
-      category: form.category,
-      href: form.href,
-      img: image || "",
-      imageUrl: image || "", // keep both for compatibility
-      price:
-        form.price === "" || form.price === null
-          ? null
-          : Number(form.price) || 0,
-    };
-
-    try {
-      const res = await fetch(`${getApiBase()}/api/products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
+  // When categoriesTree becomes available, re-apply the correct mainCategory/category
+useEffect(() => {
+  if (editingId && products.length > 0) {
+    const p = products.find(p => p._id === editingId);
+    if (p) {
+      setEditForm({
+        name: p.name || "",
+        description: p.description || "",
+        mainCategory: p.mainCategory || "",
+        category: p.category || "",
+        href: p.href || "",
+        price: p.price || "",
+        imageUrl: p.imageUrl || p.img || "",
+        imageFile: null,
       });
-      const data = await res.json();
-      setMsg(data.success ? "✅ Product added" : "❌ Failed");
-      if (data.success) {
-        setForm({
-          name: "",
-          description: "",
-          mainCategory: "",
-          category: "",
-          href: "",
-          img: "",
-          price: "",
-        });
-        loadProducts();
-      }
-    } catch (err) {
-      console.error("Failed to save product:", err);
-      setMsg("❌ Failed");
     }
-  };
+  }
+}, [editingId, products]);
+
+
+const save = async (e) => {
+  e.preventDefault();
+  setMsg("");
+  setLoading(true); // spinner ON
+
+  const f = new FormData();
+  f.append("name", form.name);
+  f.append("description", form.description || "");
+  f.append("mainCategory", form.mainCategory || "");
+  f.append("category", form.category || "");
+  f.append("href", form.href || "");
+  f.append("price", form.price || "");
+
+  if (form.imageFile) f.append("image", form.imageFile);
+
+  const res = await fetch(`${getApiBase()}/api/products`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: f,
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    setLoading(false);
+    toast.error("❌ Failed to add product");
+    return;
+  }
+
+  // ⏳ Spinner stays visible for EXACTLY 2 seconds
+  setTimeout(() => {
+    setLoading(false); // spinner OFF
+
+    // 🎉 Show toast AFTER spinner disappears
+    toast.success("✅ Product added successfully!", {
+      duration: 6000,
+    });
+
+    // Reset form
+    setForm({
+      name: "",
+      description: "",
+      mainCategory: "",
+      category: "",
+      href: "",
+      price: "",
+      imageFile: null,
+    });
+
+    // Add product visually
+    setProducts((prev) => [data.product, ...prev]);
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+  }, 2000);
+};
+
+
+
+
+
 
   const update = async (id, patch) => {
   try {
@@ -160,7 +363,8 @@ export default function AdminProductsPage() {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      loadProducts();
+      setProducts((prev) => prev.filter((p) => p._id !== id));
+
     } catch (err) {
       console.error("Failed to delete product:", err);
     }
@@ -205,8 +409,9 @@ export default function AdminProductsPage() {
       mainCategory: p.mainCategory || "",
       category: p.category || "",
       href: p.href || "",
-      img: p.img || "",
       imageUrl: p.imageUrl || "",
+imageFile: null,
+
       price:
         typeof p.price === "number"
           ? p.price.toString()
@@ -216,24 +421,55 @@ export default function AdminProductsPage() {
     });
     setMsg("");
   };
+const saveEdit = async (id) => {
+  setLoading(true);   // start spinner
+  setMsg("");
 
-  const saveEdit = (id) => {
-  const patch = {
-    name: editForm.name,
-    description: editForm.description,
-    mainCategory: editForm.mainCategory,
-    category: editForm.category,
-    href: editForm.href,
-    img: editForm.img,
-    imageUrl: editForm.imageUrl,
-    price:
-      editForm.price === "" || editForm.price === null
-        ? null
-        : Number(editForm.price) || 0,
-  };
+  const f = new FormData();
+  f.append("name", editForm.name);
+  f.append("description", editForm.description || "");
+  f.append("href", editForm.href || "");
+  f.append("price", editForm.price || "");
+  f.append("mainCategory", editForm.mainCategory || "");
+  f.append("category", editForm.category || "");
 
-  update(id, patch);
+  if (editForm.imageFile) {
+    f.append("image", editForm.imageFile);
+  }
+
+  const res = await fetch(`${getApiBase()}/api/products/${id}`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+    body: f,
+  });
+
+  const data = await res.json();
+
+  // keep spinner for 2 seconds for smoother experience
+  setTimeout(() => {
+    setLoading(false);
+
+    if (!data.success) {
+      toast.error("❌ Update failed");
+      return;
+    }
+
+    toast.success("✅ Product updated!", {
+      duration: 6000,
+    });
+
+    setEditingId(null);
+
+    setProducts((prev) =>
+      prev.map((p) => (p._id === id ? { ...p, ...data.product } : p))
+    );
+  }, 2000);
 };
+
+
+
+
+
 
 
   const mainCategories = categoriesTree ? Object.keys(categoriesTree) : [];
@@ -242,7 +478,26 @@ export default function AdminProductsPage() {
       ? categoriesTree[form.mainCategory] || []
       : [];
 
+      useEffect(() => {
+  if (products.length > 0) {
+    console.log("PRODUCT SAMPLE:", products[0]);
+  }
+}, [products]);
+
+useEffect(() => {
+  const handleScroll = () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+      setVisibleCount((prev) => prev + 60); // load 60 more each time
+    }
+  };
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
+
   if (!hydrated) return null; // 🧩 prevent hydration mismatch
+  
 
   const subCategoriesForEdit =
   categoriesTree && editForm.mainCategory
@@ -250,8 +505,41 @@ export default function AdminProductsPage() {
     : [];
 
 
+
   return (
-    <div style={{ padding: 20 }}>
+  <>
+    <Toaster
+  toastOptions={{
+    duration: 5000, // 🔥 stays for 5 seconds
+    className: "__toast",
+  }}
+  containerStyle={{
+    position: "fixed",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    zIndex: 999999,
+    pointerEvents: "none",
+  }}
+/>
+
+
+
+
+
+
+    <div className="admin-products-page"
+  style={{
+    padding: 20,
+    paddingBottom: 120,
+    boxSizing: "border-box",
+    width: "100%",
+  }}
+>
+
+
+
+
       {/* Admin Navigation Bar */}
       <div
         style={{
@@ -298,8 +586,12 @@ export default function AdminProductsPage() {
       <h1 style={{ color: theme.primary, marginTop: 0 }}>Admin · Products</h1>
 
       {/* Add Product Form */}
+
+      
       {editingId === null ? (
   // --- ADD PRODUCT FORM ---
+
+  
   <form
     onSubmit={save}
     style={{
@@ -316,78 +608,127 @@ export default function AdminProductsPage() {
   {input("description", "Description")}
     {/* MAIN CATEGORY DROPDOWN */}
 {mainCategories.length > 0 ? (
-  <select
-    value={form.mainCategory}
-    onChange={(e) =>
-      setForm({
-        ...form,
-        mainCategory: e.target.value,
-        category: "", // reset subcategory
-      })
-    }
-    style={{
-      width: "100%",
-      padding: "10px 12px",
-      borderRadius: 8,
-      border: "1px solid #ccc",
-    }}
-  >
-    <option value="">-- Select Main Category --</option>
-    {mainCategories.map((mc) => (
-      <option key={mc} value={mc}>
-        {mc}
-      </option>
-    ))}
-  </select>
+<select
+  value={form.mainCategory}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      mainCategory: e.target.value,
+      category: "", // reset category
+    })
+  }
+  style={{
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid #ccc",
+  }}
+>
+  <option value="">-- Select Main Category --</option>
+
+  {mainCategories.map((mc) => (
+    <option key={mc} value={mc}>
+      {mc}
+    </option>
+  ))}
+</select>
+
+
 ) : (
   input("mainCategory", "Main Category")
 )}
 
 {/* SUBCATEGORY DROPDOWN */}
 {mainCategories.length > 0 && form.mainCategory ? (
-  <select
-    value={form.category}
-    onChange={(e) =>
-      setForm({
-        ...form,
-        category: e.target.value,
-      })
-    }
-    style={{
-      width: "100%",
-      padding: "10px 12px",
-      borderRadius: 8,
-      border: "1px solid #ccc",
-    }}
-  >
-    <option value="">-- Select Category --</option>
-    {subCategoriesForForm.map((sub) => (
-      <option key={sub} value={sub}>
-        {sub}
-      </option>
-    ))}
-  </select>
+<select
+  value={form.category}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      category: e.target.value,
+    })
+  }
+  style={{
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid #ccc",
+  }}
+>
+  <option value="">-- Select Category --</option>
+
+  {subCategoriesForForm.map((sub) => (
+    <option key={sub} value={sub}>
+      {sub}
+    </option>
+  ))}
+</select>
+
+
 ) : (
   input("category", "Category")
 )}
 
 {input("price", "Price (€)", "number")}
-{input("img", "Image URL (img)")}
+<input
+  type="file"
+  accept="image/*"
+  onChange={(e) =>
+    setForm({ ...form, imageFile: e.target.files[0] })
+  }
+  style={{
+    width: "100%",
+    padding: "10px 12px",
+    border: "1px solid #ccc",
+    borderRadius: 8,
+  }}
+/>
+
+{/* preview image (optional) */}
+{form.imageFile && (
+  <img
+    src={URL.createObjectURL(form.imageFile)}
+    style={{ width: 120, marginTop: 10, borderRadius: 8 }}
+  />
+)}
+
 
 
     <button
-      type="submit"
+  type="submit"
+  disabled={loading}
+  style={{
+    padding: "10px 14px",
+    border: "none",
+    borderRadius: 8,
+    background: loading ? "#c5b891" : theme.accent,
+    color: theme.primary,
+    fontWeight: "bold",
+    opacity: loading ? 0.7 : 1,
+    cursor: loading ? "not-allowed" : "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  }}
+>
+  {loading ? (
+    <div
       style={{
-        padding: "10px 14px",
-        border: "none",
-        borderRadius: 8,
-        background: theme.accent,
-        color: theme.primary,
-        fontWeight: "bold",
+        width: 16,
+        height: 16,
+        border: "3px solid #fff",
+        borderTop: "3px solid transparent",
+        borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
       }}
-    >
-      Add product
-    </button>
+    ></div>
+  ) : null}
+  {loading ? "Uploading..." : "Add Product"}
+</button>
+
+
+
     {msg && <p>{msg}</p>}
   </form>
 ) : (
@@ -468,27 +809,116 @@ export default function AdminProductsPage() {
   editInput("category", "Category")
 )}
 
-    {editInput("img", "Image URL (img)")}
-    {editInput("imageUrl", "Alternative Image URL (imageUrl)")}
+    {/* FILE UPLOAD + PREVIEW (FULL WORKING VERSION) */}
+<div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+
+  {/* EXISTING IMAGE THUMBNAIL */}
+  {editForm.imageUrl && !editForm.imageFile && (
+    <img
+      src={editForm.imageUrl}
+      alt="Current"
+      style={{
+        width: 140,
+        borderRadius: 8,
+        border: "1px solid #ddd",
+        objectFit: "contain",
+        padding: 4,
+        background: "#fff",
+      }}
+    />
+  )}
+
+  {/* NEW IMAGE PREVIEW */}
+  {editForm.imageFile && (
+    <img
+      src={URL.createObjectURL(editForm.imageFile)}
+      alt="Preview"
+      style={{
+        width: 140,
+        borderRadius: 8,
+        border: "1px solid #ddd",
+        objectFit: "contain",
+        padding: 4,
+        background: "#fff",
+      }}
+    />
+  )}
+
+  {/* CUSTOM FILENAME LABEL */}
+  <div
+    style={{
+      fontSize: 13,
+      color: "#444",
+      fontStyle: "italic",
+      marginBottom: -4,
+      marginTop: 6,
+    }}
+  >
+    {editForm.imageFile
+      ? `Selected: ${editForm.imageFile.name}`
+      : editForm.imageUrl
+      ? `Current: ${editForm.imageUrl.split("/").pop()}`
+      : "No image uploaded"}
+  </div>
+
+  {/* ACTUAL FILE INPUT */}
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) =>
+      setEditForm({
+        ...editForm,
+        imageFile: e.target.files[0],
+      })
+    }
+    style={{
+      width: "100%",
+      padding: "10px 12px",
+      border: "1px solid #ccc",
+      borderRadius: 8,
+    }}
+  />
+</div>
+
+
     {editInput("price", "Price (€)", "number")}
 
     <div style={{ display: "flex", gap: 10 }}>
       <button
-        type="button"
-        onClick={() => saveEdit(editingId)}
+  type="submit"
+  disabled={loading}
+  style={{
+    flex: 1,
+    padding: "10px 14px",
+    border: "none",
+    borderRadius: 8,
+    background: loading ? "#c5b891" : theme.accent,
+    color: theme.primary,
+    fontWeight: "bold",
+    opacity: loading ? 0.7 : 1,
+    cursor: loading ? "not-allowed" : "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  }}
+>
+  {loading && (
+    <div
+      style={{
+        width: 16,
+        height: 16,
+        border: "3px solid #fff",
+        borderTop: "3px solid transparent",
+        borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
+      }}
+    />
+  )}
 
-        style={{
-          flex: 1,
-          padding: "10px 14px",
-          border: "none",
-          borderRadius: 8,
-          background: theme.accent,
-          color: theme.primary,
-          fontWeight: "bold",
-        }}
-      >
-        Save Changes
-      </button>
+  {loading ? "Saving..." : "Save Changes"}
+</button>
+
 
       <button
         type="button"
@@ -512,15 +942,23 @@ export default function AdminProductsPage() {
 
       {/* Product List */}
      {/* Product List — hidden entirely while editing */}
-{editingId === null && (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))",
-      gap: 12,
-    }}
-  >
-    {products.map((p) => (
+{editingId === null && ready && (
+ <div
+  id="product-grid"
+  style={{
+    marginTop: 20,
+    paddingBottom: 20,
+    width: "100%",
+    boxSizing: "border-box",
+  }}
+>
+
+
+    
+
+
+   {products.slice(0, visibleCount).map((p) => (
+
       <div
         key={p._id}
         style={{
@@ -528,60 +966,90 @@ export default function AdminProductsPage() {
           padding: 12,
           borderRadius: 12,
           boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          minHeight: 330,  // keeps all product cards equal height
+
         }}
       >
-        <div
-          style={{
-            height: 120,
-            background: "#faf8f5",
-            borderRadius: 8,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {p.img || p.imageUrl ? (
-            <img
-              src={p.img || p.imageUrl}
-              alt={p.name}
-              style={{ maxHeight: 100, maxWidth: "90%" }}
-            />
-          ) : (
-            <span>{p.category || "Product"}</span>
-          )}
-        </div>
+        {/* IMAGE */}
+       <div
+  style={{
+    width: "100%",
+    height: 160,
+    background: "#f4f4f4",
+    borderRadius: 10,
+    overflow: "hidden",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  }}
+>
+  {ready ? (
+    p.imageUrl || p.img ? (
+      <img
+  src={p.imageUrl || p.img}
+  alt={p.name}
+  loading="lazy"
+  style={{
+    maxWidth: "100%",
+    maxHeight: "100%",
+    objectFit: "contain",
+    display: "block",       // REQUIRED for margin auto to work
+    margin: "0 auto",       // 🔥 centers horizontally
+    padding: 8,             // optional spacing
+  }}
+/>
+
+    ) : (
+      <span style={{ color: "#999" }}>No Image</span>
+    )
+  ) : (
+    <div style={{ width: "100%", height: "100%", background: "#eee" }} />
+  )}
+</div>
+
+
+
+
+
 
         <h3
           style={{
-            margin: "10px 0 6px 0",
-            color: theme.primary,
+            margin: 0,
+            fontSize: 14,
+            fontWeight: "600",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           {p.name}
         </h3>
 
-        <div style={{ color: "#555", minHeight: 36 }}>
-          {p.description}
-        </div>
-
-        <div
-          style={{
-            fontSize: 12,
-            color: "#777",
-            marginTop: 4,
-          }}
-        >
+        <div style={{ fontSize: 12, color: "#666" }}>
           <strong>{p.mainCategory}</strong>
           {p.category ? ` · ${p.category}` : ""}
         </div>
 
-        <div style={{ margin: "6px 0" }}>
-          <strong>
-            {p.price != null ? `€ ${Number(p.price).toFixed(2)}` : "—"}
-          </strong>
+        <div style={{ fontSize: 12, color: "#444" }}>
+          {p.description && p.description.length > 40
+            ? p.description.slice(0, 40) + "..."
+            : p.description}
         </div>
 
-        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+        <div style={{ fontWeight: "bold", fontSize: 14 }}>
+          {p.price ? `€ ${Number(p.price).toFixed(2)}` : "—"}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: 6,
+            marginTop: "auto",
+          }}
+        >
           <button
             onClick={() => {
               window.scrollTo({ top: 0 });
@@ -589,38 +1057,90 @@ export default function AdminProductsPage() {
             }}
             style={{
               flex: 1,
-              padding: "8px",
-              border: "none",
-              borderRadius: 8,
+              padding: "6px",
               background: "#e8e1cc",
-              color: theme.primary,
+              borderRadius: 6,
               fontWeight: "bold",
+              border: "none",
               cursor: "pointer",
+              fontSize: 12,
             }}
           >
             Edit
           </button>
 
           <button
-            onClick={() => del(p._id)}
-            style={{
-              flex: 1,
-              padding: "8px",
-              border: "none",
-              borderRadius: 8,
-              background: "#c62828",
-              color: "#fff",
-              fontWeight: "bold",
-            }}
-          >
-            Delete
-          </button>
+  onClick={() => setDeleteTarget(p)}
+  style={{
+    flex: 1,
+    padding: "6px",
+    background: "#c62828",
+    borderRadius: 6,
+    color: "#fff",
+    border: "none",
+    cursor: "pointer",
+    fontWeight: "bold",
+    fontSize: 12,
+  }}
+>
+  Delete
+</button>
+
         </div>
       </div>
-    ))}
+        ))}
   </div>
-)}
+)}  {/* ✅ Fully closes the conditional block */}
 
-    </div>
-  );
+
+
+<DeleteModal
+  product={deleteTarget}
+  onCancel={() => setDeleteTarget(null)}
+  onConfirm={(id) => {
+    del(id);
+    setDeleteTarget(null);
+  }}
+/>
+
+</div>
+
+<style jsx>{`
+  #product-grid {
+    display: grid;
+    gap: 16px;
+    padding-bottom: 60px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-items: start;
+  }
+`}</style>   {/* ✅ NOW VALID LOCATION */}
+
+<style jsx global>{`
+  .admin-products-page .__toast-container {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 999999 !important;
+    pointer-events: none !important;
+  }
+
+  .admin-products-page .__toast {
+    background: #fff !important;
+    color: #333 !important;
+    padding: 14px 22px !important;
+    border-radius: 12px !important;
+    font-size: 16px !important;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.3) !important;
+    pointer-events: all !important;
+  }
+
+  .admin-products-page @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+`}</style>
+
+</>
+);
 }
