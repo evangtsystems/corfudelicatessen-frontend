@@ -55,6 +55,18 @@ const [deleteTarget, setDeleteTarget] = useState(null);
 const [ready, setReady] = useState(false);
 
 useEffect(() => {
+  // Remove any additional default toast containers created by React Hot Toast
+  const extra = document.querySelectorAll('#__react-hot-toast');
+  extra.forEach((el, i) => {
+    if (i > 0) el.remove();  // keep first instance only
+  });
+
+  // Remove toasts from previous prerendering/caching
+  toast.remove();
+}, []);
+
+
+useEffect(() => {
   setTimeout(() => setReady(true), 50);
 }, []);
 
