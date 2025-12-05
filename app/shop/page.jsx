@@ -6,6 +6,7 @@ import { getApiBase } from "../../src/lib/apiBase";
 import { getToken } from "../../src/lib/auth";
 import toast from "react-hot-toast";
 import { useCart } from "../../src/lib/cartContext";
+import ShopFilterBar from "../../src/components/ShopFilterBar";
 
 
 const theme = { primary: "#1f3b2e", accent: "#d1b76e" };
@@ -154,6 +155,9 @@ const add = async (p) => {
       <h1 style={{ color: theme.primary, marginTop: 0 }}>
         {mainCategory || "Shop"}
       </h1>
+
+      <ShopFilterBar categories={categories} />
+
 
       {/* Subcategory buttons */}
       {subCategories.length > 0 && (

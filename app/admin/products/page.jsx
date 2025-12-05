@@ -635,6 +635,21 @@ useEffect(() => {
         </button>
 
         <button
+    onClick={() => (window.location.href = "/admin/categories")}
+    style={{
+      background: "#1f3b2e",
+      color: "#fff",
+      border: "none",
+      borderRadius: 6,
+      padding: "8px 14px",
+      fontWeight: "bold",
+      cursor: "pointer",
+    }}
+  >
+    🗂 Κατηγορίες
+  </button>
+
+        <button
           onClick={() => (window.location.href = "/admin/users")}
           style={{
             background: "#1f3b2e",
@@ -1041,18 +1056,27 @@ useEffect(() => {
 
 
     {/* PRODUCT GRID */}
-    <div
-      id="product-grid"
-      style={{
-        marginTop: 20,
-        paddingBottom: 20,
-        width: "100%",
-        boxSizing: "border-box",
-      }}
-    >
-      {(filteredProducts.length > 0 ? filteredProducts : products)
-  .slice(0, visibleCount)
-  .map((p) => (
+   <div
+  id="product-grid"
+  style={{
+    marginTop: 20,
+    paddingBottom: 20,
+    width: "100%",
+    boxSizing: "border-box",
+  }}
+>
+  {/* EMPTY RESULT MESSAGE */}
+  {filteredProducts.length === 0 && (
+    <p style={{ opacity: 0.6, marginTop: 20 }}>
+      No products found for this category.
+    </p>
+  )}
+
+  {/* ALWAYS USE filteredProducts */}
+  {filteredProducts
+    .slice(0, visibleCount)
+    .map((p) => (
+
 
         <div key={p._id} style={{ position: "relative" }}>
 
