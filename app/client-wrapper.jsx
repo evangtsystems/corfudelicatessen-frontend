@@ -21,8 +21,8 @@ export default function ClientWrapper({ children }) {
         {children}
       </main>
 
-      {/* FOOTER ONLY ON PUBLIC PAGES */}
-      {!isAdmin && <Footer />}
+      {/* FOOTER ALWAYS VISIBLE */}
+      <Footer />
     </>
   );
 }

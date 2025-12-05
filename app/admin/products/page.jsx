@@ -5,6 +5,8 @@ import { getToken } from "../../../src/lib/auth";
 import { VariableSizeList as List } from "react-window";
 import DeleteModal from "../../../src/components/DeleteModal";
 import toast, { Toaster } from "react-hot-toast";
+import AdminProductFilters from "../../../src/components/AdminProductFilters";
+
 
 
 
@@ -30,6 +32,12 @@ const setRowHeight = (index, size) => {
 };
 
 const [loading, setLoading] = useState(false);
+const [selectedProducts, setSelectedProducts] = useState([]);
+const [filterMain, setFilterMain] = useState("");
+const [filterCategory, setFilterCategory] = useState("");
+const [filteredProducts, setFilteredProducts] = useState([]);
+
+
 
 
 
@@ -64,6 +72,21 @@ useEffect(() => {
   // Remove toasts from previous prerendering/caching
   toast.remove();
 }, []);
+
+useEffect(() => {
+  let list = products;
+
+  if (filterMain) {
+    list = list.filter((p) => p.mainCategory === filterMain);
+  }
+
+  if (filterCategory) {
+    list = list.filter((p) => p.category === filterCategory);
+  }
+
+  setFilteredProducts(list);
+}, [filterMain, filterCategory, products]);
+
 
 
 useEffect(() => {
@@ -381,6 +404,44 @@ const save = async (e) => {
       console.error("Failed to delete product:", err);
     }
   };
+
+  const bulkDelete = async () => {
+  if (selectedProducts.length === 0) return;
+
+  const confirmed = window.confirm(
+    `Are you sure you want to delete ${selectedProducts.length} products?`
+  );
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch(`${getApiBase()}/api/products/bulk-delete`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ids: selectedProducts }),
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      toast.error("Failed to delete products");
+      return;
+    }
+
+    // Remove from UI
+    setProducts(prev =>
+      prev.filter(p => !selectedProducts.includes(p._id))
+    );
+
+    setSelectedProducts([]);
+    toast.success("Products deleted");
+  } catch (err) {
+    console.error(err);
+    toast.error("Server error");
+  }
+};
+
 
   const input = (name, placeholder, type = "text") => (
     <input
@@ -947,157 +1008,211 @@ useEffect(() => {
 )}
 
 
-      {/* Product List */}
-     {/* Product List — hidden entirely while editing */}
+  {/* Product List — hidden entirely while editing */}
 {editingId === null && ready && (
- <div
-  id="product-grid"
-  style={{
-    marginTop: 20,
-    paddingBottom: 20,
-    width: "100%",
-    boxSizing: "border-box",
-  }}
->
+  <>
 
-
-    
-
-
-   {products.slice(0, visibleCount).map((p) => (
-
-      <div
-        key={p._id}
-        style={{
-          background: "#fff",
-          padding: 12,
-          borderRadius: 12,
-          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          minHeight: 330,  // keeps all product cards equal height
-
+    {/* SELECT ALL */}
+    <div style={{ marginBottom: 15, display: "flex", alignItems: "center", gap: 10 }}>
+      <input
+        type="checkbox"
+        checked={selectedProducts.length === products.length && products.length > 0}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setSelectedProducts(products.map((p) => p._id));
+          } else {
+            setSelectedProducts([]);
+          }
         }}
-      >
-        {/* IMAGE */}
-       <div
-  style={{
-    width: "100%",
-    height: 160,
-    background: "#f4f4f4",
-    borderRadius: 10,
-    overflow: "hidden",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  }}
->
-  {ready ? (
-    p.imageUrl || p.img ? (
-      <img
-  src={p.imageUrl || p.img}
-  alt={p.name}
-  loading="lazy"
-  style={{
-    maxWidth: "100%",
-    maxHeight: "100%",
-    objectFit: "contain",
-    display: "block",       // REQUIRED for margin auto to work
-    margin: "0 auto",       // 🔥 centers horizontally
-    padding: 8,             // optional spacing
-  }}
+        style={{ width: 18, height: 18 }}
+      />
+      <span>Select All Products</span>
+    </div>
+
+
+    <AdminProductFilters
+  mainCategories={mainCategories}
+  categoriesTree={categoriesTree}
+  filterMain={filterMain}
+  filterCategory={filterCategory}
+  setFilterMain={setFilterMain}
+  setFilterCategory={setFilterCategory}
 />
 
-    ) : (
-      <span style={{ color: "#999" }}>No Image</span>
-    )
-  ) : (
-    <div style={{ width: "100%", height: "100%", background: "#eee" }} />
-  )}
-</div>
 
+    {/* PRODUCT GRID */}
+    <div
+      id="product-grid"
+      style={{
+        marginTop: 20,
+        paddingBottom: 20,
+        width: "100%",
+        boxSizing: "border-box",
+      }}
+    >
+      {(filteredProducts.length > 0 ? filteredProducts : products)
+  .slice(0, visibleCount)
+  .map((p) => (
 
+        <div key={p._id} style={{ position: "relative" }}>
 
-
-
-
-        <h3
-          style={{
-            margin: 0,
-            fontSize: 14,
-            fontWeight: "600",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {p.name}
-        </h3>
-
-        <div style={{ fontSize: 12, color: "#666" }}>
-          <strong>{p.mainCategory}</strong>
-          {p.category ? ` · ${p.category}` : ""}
-        </div>
-
-        <div style={{ fontSize: 12, color: "#444" }}>
-          {p.description && p.description.length > 40
-            ? p.description.slice(0, 40) + "..."
-            : p.description}
-        </div>
-
-        <div style={{ fontWeight: "bold", fontSize: 14 }}>
-          {p.price ? `€ ${Number(p.price).toFixed(2)}` : "—"}
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: 6,
-            marginTop: "auto",
-          }}
-        >
-          <button
-            onClick={() => {
-              window.scrollTo({ top: 0 });
-              setTimeout(() => startEdit(p), 1);
+          {/* SELECT CHECKBOX */}
+          <input
+            type="checkbox"
+            checked={selectedProducts.includes(p._id)}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedProducts((prev) => [...prev, p._id]);
+              } else {
+                setSelectedProducts((prev) =>
+                  prev.filter((id) => id !== p._id)
+                );
+              }
             }}
             style={{
-              flex: 1,
-              padding: "6px",
-              background: "#e8e1cc",
-              borderRadius: 6,
-              fontWeight: "bold",
-              border: "none",
-              cursor: "pointer",
-              fontSize: 12,
+              position: "absolute",
+              top: 8,
+              left: 8,
+              width: 18,
+              height: 18,
+              zIndex: 10,
+            }}
+          />
+
+          {/* ORIGINAL CARD WRAPPER */}
+          <div
+            style={{
+              background: "#fff",
+              padding: 12,
+              borderRadius: 12,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              minHeight: 330,
             }}
           >
-            Edit
-          </button>
+            {/* IMAGE */}
+            <div
+              style={{
+                width: "100%",
+                height: 160,
+                background: "#f4f4f4",
+                borderRadius: 10,
+                overflow: "hidden",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {ready ? (
+                p.imageUrl || p.img ? (
+                  <img
+                    src={p.imageUrl || p.img}
+                    alt={p.name}
+                    loading="lazy"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      objectFit: "contain",
+                      display: "block",
+                      margin: "0 auto",
+                      padding: 8,
+                    }}
+                  />
+                ) : (
+                  <span style={{ color: "#999" }}>No Image</span>
+                )
+              ) : (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    background: "#eee",
+                  }}
+                />
+              )}
+            </div>
 
-          <button
-  onClick={() => setDeleteTarget(p)}
-  style={{
-    flex: 1,
-    padding: "6px",
-    background: "#c62828",
-    borderRadius: 6,
-    color: "#fff",
-    border: "none",
-    cursor: "pointer",
-    fontWeight: "bold",
-    fontSize: 12,
-  }}
->
-  Delete
-</button>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: 14,
+                fontWeight: "600",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {p.name}
+            </h3>
 
+            <div style={{ fontSize: 12, color: "#666" }}>
+              <strong>{p.mainCategory}</strong>
+              {p.category ? ` · ${p.category}` : ""}
+            </div>
+
+            <div style={{ fontSize: 12, color: "#444" }}>
+              {p.description && p.description.length > 40
+                ? p.description.slice(0, 40) + "..."
+                : p.description}
+            </div>
+
+            <div style={{ fontWeight: "bold", fontSize: 14 }}>
+              {p.price ? `€ ${Number(p.price).toFixed(2)}` : "—"}
+            </div>
+
+            {/* BUTTONS */}
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+                marginTop: "auto",
+              }}
+            >
+              <button
+                onClick={() => {
+                  window.scrollTo({ top: 0 });
+                  setTimeout(() => startEdit(p), 1);
+                }}
+                style={{
+                  flex: 1,
+                  padding: "6px",
+                  background: "#e8e1cc",
+                  borderRadius: 6,
+                  fontWeight: "bold",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 12,
+                }}
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() => setDeleteTarget(p)}
+                style={{
+                  flex: 1,
+                  padding: "6px",
+                  background: "#c62828",
+                  borderRadius: 6,
+                  color: "#fff",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: 12,
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-        ))}
-  </div>
-)}  {/* ✅ Fully closes the conditional block */}
+      ))}
+    </div>
+  </>
+)}
+ {/* ✅ Fully closes the conditional block */}
 
 
 
@@ -1109,6 +1224,50 @@ useEffect(() => {
     setDeleteTarget(null);
   }}
 />
+
+{selectedProducts.length > 0 && (
+  <div
+    style={{
+      position: "fixed",
+      bottom: 20,
+      left: "50%",
+      transform: "translateX(-50%)",
+      background: "#c62828",
+      color: "#fff",
+      padding: "12px 22px",
+      borderRadius: 14,
+      boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
+      display: "flex",
+      gap: 20,
+      alignItems: "center",
+      zIndex: 9999,
+      fontSize: 16,
+      fontWeight: "600",
+    }}
+  >
+    <span>{selectedProducts.length} selected</span>
+
+    <button
+      onClick={bulkDelete}
+      style={{
+        background: "#fff",
+        color: "#c62828",
+        padding: "8px 18px",
+        borderRadius: 10,
+        fontWeight: "bold",
+        border: "none",
+        cursor: "pointer",
+        fontSize: 15,
+      }}
+    >
+      Delete Selected
+    </button>
+  </div>
+)}
+
+
+
+
 
 </div>
 
