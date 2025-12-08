@@ -678,6 +678,22 @@ useEffect(() => {
   </button>
 
         <button
+  onClick={() => (window.location.href = "/admin/trash")}
+  style={{
+    background: "#1f3b2e",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    padding: "8px 14px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  }}
+>
+  🗑 Κάδος
+</button>
+
+
+        <button
           onClick={() => (window.location.href = "/admin/users")}
           style={{
             background: "#1f3b2e",
