@@ -393,23 +393,34 @@ const save = async (e) => {
 
 
   const del = async (id) => {
-    try {
-      await fetch(`${getApiBase()}/api/products/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProducts((prev) => prev.filter((p) => p._id !== id));
+  try {
+    const res = await fetch(`${getApiBase()}/api/products/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    } catch (err) {
-      console.error("Failed to delete product:", err);
+    const data = await res.json();
+
+    if (!data.success) {
+      toast.error("Delete failed");
+      return;
     }
-  };
+
+    toast.success("Moved to trash");
+
+    setProducts((prev) => prev.filter((p) => p._id !== id));
+  } catch (err) {
+    console.error("Failed to delete product:", err);
+    toast.error("Delete error");
+  }
+};
+
 
   const bulkDelete = async () => {
   if (selectedProducts.length === 0) return;
 
   const confirmed = window.confirm(
-    `Are you sure you want to delete ${selectedProducts.length} products?`
+    `Are you sure you want to move ${selectedProducts.length} products to trash?`
   );
   if (!confirmed) return;
 
@@ -425,22 +436,23 @@ const save = async (e) => {
 
     const data = await res.json();
     if (!data.success) {
-      toast.error("Failed to delete products");
+      toast.error("Failed");
       return;
     }
 
-    // Remove from UI
-    setProducts(prev =>
-      prev.filter(p => !selectedProducts.includes(p._id))
+    // Remove visually
+    setProducts((prev) =>
+      prev.filter((p) => !selectedProducts.includes(p._id))
     );
 
     setSelectedProducts([]);
-    toast.success("Products deleted");
+    toast.success("Moved to trash");
   } catch (err) {
     console.error(err);
     toast.error("Server error");
   }
 };
+
 
 
   const input = (name, placeholder, type = "text") => (
@@ -635,6 +647,22 @@ useEffect(() => {
         </button>
 
         <button
+  onClick={() => (window.location.href = "/admin/products/trash")}
+  style={{
+    background: "#1f3b2e",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    padding: "8px 14px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  }}
+>
+  🗑️ Κάδος
+</button>
+
+
+        <button
     onClick={() => (window.location.href = "/admin/categories")}
     style={{
       background: "#1f3b2e",
@@ -663,6 +691,29 @@ useEffect(() => {
         >
           👥 Χρήστες
         </button>
+
+                {/* 🔐 Developer-only vault (second bin) */}
+        {typeof window !== "undefined" &&
+ localStorage.getItem("devMode") === "true" && (
+  <button
+    onClick={() => (window.location.href = "/admin/products/dev-vault")}
+    style={{
+      background: "#1f3b2e",
+      color: "#fff",
+      border: "none",
+      borderRadius: 6,
+      padding: "8px 14px",
+      fontWeight: "bold",
+      cursor: "pointer",
+    }}
+  >
+    🛡️ Dev Vault
+  </button>
+)}
+
+
+
+
       </div>
 
       {/* Header */}
