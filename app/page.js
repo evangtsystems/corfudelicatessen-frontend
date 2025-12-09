@@ -1,6 +1,7 @@
 "use client";
 
-import RippleGrid from "../src/components/RippleGrid";
+import RippleGrid from "../src/components/RippleGrid"
+
 
 export default function HomePage() {
   const theme = {
@@ -15,9 +16,9 @@ export default function HomePage() {
     <div
       style={{
         position: "relative",
-        minHeight: "100vh",
+        Height: "100vh",
         width: "100%",
-        overflow: "hidden",
+        
         background: theme.bg,
         color: theme.primary,
         fontFamily:
@@ -25,20 +26,23 @@ export default function HomePage() {
       }}
     >
       {/* Animated background */}
-      <RippleGrid
-        enableRainbow={false}
-        gridColor="#d1b76e"
-        rippleIntensity={0.08}
-        gridSize={9.0}
-        gridThickness={16.0}
-        fadeDistance={1.7}
-        vignetteStrength={2.4}
-        glowIntensity={0.12}
-        opacity={0.9}
-        gridRotation={18}
-        mouseInteraction={true}
-        mouseInteractionRadius={1.2}
-      />
+   <RippleGrid
+  enableRainbow={false}
+  gridColor="#d1b76e"
+  rippleIntensity={0.08}
+  gridSize={9.0}
+  gridThickness={16.0}
+  fadeDistance={1.7}
+  vignetteStrength={2.4}
+  glowIntensity={0.12}
+  opacity={0.9}
+  gridRotation={18}
+  mouseInteraction={true}
+  mouseInteractionRadius={1.2}
+/>
+
+
+
 
       {/* Dark overlay to keep text readable */}
       <div

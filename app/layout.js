@@ -7,20 +7,22 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ width: "100%", height: "100%", margin: 0, padding: 0 }}>
       <body
         style={{
           margin: 0,
           padding: 0,
-          minHeight: "100vh",
-          background: "#f8f5f0",
+          width: "100%",
+          height: "100%",     // <-- REQUIRED
+         background: "#070815",
+
           overflowX: "hidden",
         }}
       >
+        
+
         <CartProvider>
-          <ClientWrapper>
-            {children}
-          </ClientWrapper>
+          <ClientWrapper>{children}</ClientWrapper>
         </CartProvider>
       </body>
     </html>
