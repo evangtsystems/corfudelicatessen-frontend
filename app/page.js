@@ -16,8 +16,12 @@ export default function HomePage() {
     <div
       style={{
         position: "relative",
-        Height: "100vh",
         width: "100%",
+height: "100%",
+overflow: "hidden",
+
+
+
         
         background: theme.bg,
         color: theme.primary,
@@ -144,7 +148,7 @@ export default function HomePage() {
 
             <button
               onClick={() => {
-                window.location.href = "/admin/login";
+                window.location.href = "/login";
               }}
               style={{
                 padding: "8px 16px",
