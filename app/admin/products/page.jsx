@@ -712,7 +712,7 @@ useEffect(() => {
         {typeof window !== "undefined" &&
  localStorage.getItem("devMode") === "true" && (
   <button
-    onClick={() => (window.location.href = "/admin/products/dev-vault")}
+    onClick={() => (window.location.href = "/admin/dev-vault")}
     style={{
       background: "#1f3b2e",
       color: "#fff",

@@ -14,7 +14,7 @@ export default function RootLayout({ children }) {
           padding: 0,
           width: "100%",
           height: "100%",     // <-- REQUIRED
-         background: "#070815",
+         background: "#050e00ff",
 
           overflowX: "hidden",
         }}
