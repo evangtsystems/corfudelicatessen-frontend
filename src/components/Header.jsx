@@ -709,6 +709,26 @@ export default function Header() {
                 >
                   +
                 </button>
+
+                <button
+  onClick={() => {
+    const updated = cartItems.filter((i) => i.productId !== item.productId);
+    updateCartGlobal(updated, user, getApiBase, getToken);
+  }}
+  style={{
+    marginLeft: "auto",
+    padding: "6px 10px",
+    background: "red",
+    color: "white",
+    borderRadius: "6px",
+    border: "none",
+    cursor: "pointer",
+    fontWeight: "bold",
+  }}
+>
+  Remove
+</button>
+
               </div>
             </div>
           </div>
