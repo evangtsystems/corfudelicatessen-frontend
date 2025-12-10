@@ -27,6 +27,24 @@ function ShopPageInner() {
   const category = searchParams.get("category") || "";
   const { cartItems, updateCartGlobal } = useCart();
 
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  useEffect(() => {
+    function measureHeader() {
+      const el = document.getElementById("global-header");
+      if (el) {
+        setHeaderHeight(el.offsetHeight);
+      }
+    }
+
+    // first measurement
+    measureHeader();
+
+    // re-measure on resize / orientation change
+    window.addEventListener("resize", measureHeader);
+    return () => window.removeEventListener("resize", measureHeader);
+  }, []);
+
 
   // Load categories
   useEffect(() => {
@@ -152,51 +170,76 @@ const add = async (p) => {
 
   return (
     <div>
-      <h1 style={{ color: theme.primary, marginTop: 0 }}>
-        {mainCategory || "Shop"}
-      </h1>
+     <div
+  className="shop-sticky-main"
+  style={{
+    position: "sticky",
+    top: headerHeight,          // ✅ uses real header height
+    zIndex: 900,
+    background: "#f8f5f0",
+    paddingBottom: 12,
+    paddingTop: 10,
+    marginBottom: 20,
+    borderBottom: "1px solid rgba(0,0,0,0.1)",
+  }}
+>
+  <h1 style={{ color: theme.primary, margin: 0 }}>
+    {mainCategory || "Shop"}
+  </h1>
 
-      <ShopFilterBar categories={categories} />
+  <ShopFilterBar categories={categories} />
+</div>
+
+
 
 
       {/* Subcategory buttons */}
       {subCategories.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "10px",
-            marginBottom: "20px",
-          }}
-        >
-          {subCategories.map((sub) => (
-            <button
-              key={sub}
-              onClick={() =>
-                router.push(
-                  `/shop?mainCategory=${encodeURIComponent(
-                    mainCategory
-                  )}&category=${encodeURIComponent(sub)}`
-                )
-              }
-              style={{
-                padding: "8px 14px",
-                borderRadius: "6px",
-                border:
-                  sub === category
-                    ? `2px solid ${theme.accent}`
-                    : "1px solid #ccc",
-                background: sub === category ? theme.accent : "#f9f9f9",
-                color: sub === category ? theme.primary : "#333",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              {sub}
-            </button>
-          ))}
-        </div>
-      )}
+  <div
+    className="shop-sticky-sub"
+    style={{
+      position: "sticky",
+      top: headerHeight + 60,   // ✅ sits just below main sticky bar
+      zIndex: 850,
+      background: "#f8f5f0",
+      padding: "8px 0",
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "10px",
+      borderBottom: "1px solid rgba(0,0,0,0.05)",
+      marginBottom: "20px",
+    }}
+  >
+    {subCategories.map((sub) => (
+      <button
+        key={sub}
+        onClick={() =>
+          router.push(
+            `/shop?mainCategory=${encodeURIComponent(
+              mainCategory
+            )}&category=${encodeURIComponent(sub)}`
+          )
+        }
+        style={{
+          padding: "8px 14px",
+          borderRadius: "6px",
+          border:
+            sub === category
+              ? `2px solid ${theme.accent}`
+              : "1px solid #ccc",
+          background: sub === category ? theme.accent : "#f9f9f9",
+          color: sub === category ? theme.primary : "#333",
+          fontWeight: "bold",
+          cursor: "pointer",
+        }}
+      >
+        {sub}
+      </button>
+    ))}
+  </div>
+)}
+
+
 
       {filtered.length === 0 && (
         <p style={{ color: "#777", fontStyle: "italic" }}>
@@ -283,6 +326,21 @@ const add = async (p) => {
           </div>
         ))}
       </div>
+
+     <style jsx global>{`
+  @media (max-width: 768px) {
+    .shop-sticky-main {
+      /* just a tiny cushion if needed */
+      /* top is already set from headerHeight inline */
+    }
+    .shop-sticky-sub {
+      /* same here */
+    }
+  }
+`}</style>
+
+
+
     </div>
   );
 }

@@ -18,8 +18,8 @@ export default function ClientWrapper({ children }) {
       {!isAdmin && <Toaster position="bottom-center" />}
 
       <main style={{ flex: 1, padding: 20 }}>
-        {children}
-      </main>
+  {children}
+</main>
 
       {/* FOOTER ALWAYS VISIBLE */}
       <Footer />

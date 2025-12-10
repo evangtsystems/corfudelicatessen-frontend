@@ -3,7 +3,8 @@
 import { useCart } from "../../src/lib/cartContext";
 
 export default function CartPage() {
-  const { cartItems, updateCartGlobal, user } = useCart();
+  const { cartItems, cartCount, updateCartGlobal, user } = useCart();
+
 
   const updateQty = async (id, qty) => {
     const updated = cartItems.map((i) =>
@@ -23,8 +24,16 @@ export default function CartPage() {
   );
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Your Cart</h1>
+   <div
+  style={{
+    padding: "20px",
+    background: "#ffffff",   // ← FIX
+    minHeight: "70vh",       // ← makes page tall
+    color: "#1f3b2e",        // ← text readable
+  }}
+>
+
+      <h1>Your Cart ({cartCount})</h1>
 
       {cartItems.length === 0 && <p>Your cart is empty.</p>}
 

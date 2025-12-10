@@ -95,7 +95,27 @@ export default function Header() {
 
   // ---------------- RENDER ----------------
   return (
-    <div style={{ position: "sticky", top: 0, zIndex: 1000 }}>
+ <div
+  id="global-header"
+  style={{ position: "sticky", top: 0, zIndex: 1000 }}
+>
+
+      {/* MAIN HEADER */}
+      <header
+        style={{
+          width: "100%",
+          background:
+            "linear-gradient(to right, white 0%, white 50%, #b1dd12ff 100%)",
+          color: "white",
+          padding: "12px 20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          boxSizing: "border-box",
+        }}
+      ></header>
+
+
       {/* MAIN HEADER */}
       <header
         style={{
@@ -318,26 +338,29 @@ export default function Header() {
             )}
 
             <div
-              style={{
-                width: "100%",
-                padding: "10px 20px",
-                color: "white",
-                cursor: "pointer",
-                fontWeight: "bold",
-                display: "flex",
-                gap: "10px",
-              }}
-              onClick={() => {
-                setMenuOpen(false);
-                if (window.innerWidth < 768) {
-                  window.location.href = "/cart";
-                } else {
-                  setCartOpen(true);
-                }
-              }}
-            >
-              🛒 Cart
-            </div>
+  style={{
+    width: "100%",
+    padding: "10px 20px",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: "bold",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  }}
+  onClick={() => {
+    setMenuOpen(false);
+    if (window.innerWidth < 768) {
+      window.location.href = "/cart";
+    } else {
+      setCartOpen(true);
+    }
+  }}
+>
+  🛒 Cart {cartCount > 0 && `(${cartCount})`}
+</div>
+
+
 
             {user?.role === "admin" && (
               <Link
@@ -360,19 +383,22 @@ export default function Header() {
 
       {/* ✅ SECONDARY HEADER */}
       <div
-        style={{
-          width: "100%",
-          background: "#2c1810",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "10px 20px",
-          flexWrap: "wrap",
-          gap: "12px",
-          boxSizing: "border-box",
-          position: "relative",
-        }}
-      >
+  style={{
+    width: "100%",
+    background: "#2c1810",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "10px 20px",
+    flexWrap: "wrap",
+    gap: "12px",
+    boxSizing: "border-box",
+    position: "sticky",
+    top: "70px",
+    zIndex: 9998,
+  }}
+>
+
         {/* Left */}
         <div style={{ display: "flex", alignItems: "center", gap: "25px", flexWrap: "wrap", position: "relative" }}>
           <Link href="/" style={{ color: "#fff", textDecoration: "none", fontWeight: pathname === "/" ? "bold" : "normal" }}>
