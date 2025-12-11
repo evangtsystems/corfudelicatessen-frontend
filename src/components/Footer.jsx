@@ -21,7 +21,7 @@ export default function Footer() {
           margin: "0 auto",
         }}
       >
-        {/* --- Column 1: Logo + Contact --- */}
+        {/* Column 1 */}
         <div>
           <img
             src="https://corfudelicatessen.com/wp-content/uploads/2022/03/corfudelicatessenlogo22plus.webp"
@@ -52,7 +52,7 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* --- Column 2: Κατηγορίες --- */}
+        {/* Column 2 */}
         <div>
           <h3 style={{ color: "#d1b76e" }}>ΚΑΤΗΓΟΡΙΕΣ</h3>
           <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
@@ -72,54 +72,41 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link href="/privacy" style={{ color: "#0c0c0cff", textDecoration: "none" }}>
+              <Link href="/privacy-policy" style={{ color: "#0c0c0cff", textDecoration: "none" }}>
                 Πολιτική Απορρήτου
               </Link>
             </li>
           </ul>
         </div>
 
-        {/* --- Column 3: Προϊόντα --- */}
-<div>
-  <h3 style={{ color: "#d1b76e" }}>ΠΡΟΪΟΝΤΑ</h3>
-  <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
-    <li>
-      <Link
-        href="/shop?mainCategory=Αλλαντικά"
-        style={{ color: "#0c0c0c", textDecoration: "none" }}
-      >
-        Αλλαντικά
-      </Link>
-    </li>
-    <li>
-      <Link
-        href="/shop?mainCategory=Κατεψυγμένα Τρόφιμα"
-        style={{ color: "#0e0d0d", textDecoration: "none" }}
-      >
-        Κατεψυγμένα Τρόφιμα
-      </Link>
-    </li>
-    <li>
-      <Link
-        href="/shop?mainCategory=Τρόφιμα"
-        style={{ color: "#0a0a0a", textDecoration: "none" }}
-      >
-        Τρόφιμα
-      </Link>
-    </li>
-    <li>
-      <Link
-        href="/shop?mainCategory=Τυροκομικά"
-        style={{ color: "#0e0d0d", textDecoration: "none" }}
-      >
-        Τυροκομικά
-      </Link>
-    </li>
-  </ul>
-</div>
+        {/* Column 3 */}
+        <div>
+          <h3 style={{ color: "#d1b76e" }}>ΠΡΟΪΟΝΤΑ</h3>
+          <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
+            <li>
+              <Link href="/shop?mainCategory=Αλλαντικά" style={{ color: "#0c0c0c", textDecoration: "none" }}>
+                Αλλαντικά
+              </Link>
+            </li>
+            <li>
+              <Link href="/shop?mainCategory=Κατεψυγμένα Τρόφιμα" style={{ color: "#0e0d0d", textDecoration: "none" }}>
+                Κατεψυγμένα Τρόφιμα
+              </Link>
+            </li>
+            <li>
+              <Link href="/shop?mainCategory=Τρόφιμα" style={{ color: "#0a0a0a", textDecoration: "none" }}>
+                Τρόφιμα
+              </Link>
+            </li>
+            <li>
+              <Link href="/shop?mainCategory=Τυροκομικά" style={{ color: "#0e0d0d", textDecoration: "none" }}>
+                Τυροκομικά
+              </Link>
+            </li>
+          </ul>
+        </div>
 
-
-        {/* --- Column 4: Newsletter --- */}
+        {/* Column 4 */}
         <div>
           <h3 style={{ color: "#d1b76e" }}>NEWSLETTER</h3>
           <p style={{ marginTop: "10px" }}>
@@ -159,12 +146,40 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* --- BOTTOM COPYRIGHT BAR --- */}
+      {/* --- GDPR LEGAL LINKS --- */}
       <div
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.2)",
-          marginTop: "40px",
-          paddingTop: "20px",
+          display: "flex",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+          marginTop: "35px",
+          fontSize: "0.9rem",
+        }}
+      >
+        <Link href="/privacy-policy" style={{ color: "#1f1b1b", textDecoration: "none" }}>
+          Πολιτική Απορρήτου
+        </Link>
+        <span style={{ color: "#777" }}>|</span>
+        <Link href="/cookies-policy" style={{ color: "#1f1b1b", textDecoration: "none" }}>
+          Πολιτική Cookies
+        </Link>
+        <span style={{ color: "#777" }}>|</span>
+        <Link href="/terms" style={{ color: "#1f1b1b", textDecoration: "none" }}>
+          Όροι & Προϋποθέσεις
+        </Link>
+        <span style={{ color: "#777" }}>|</span>
+        <Link href="/impresuum" style={{ color: "#1f1b1b", textDecoration: "none" }}>
+          Νομικές Πληροφορίες
+        </Link>
+      </div>
+
+      {/* --- COPYRIGHT BAR --- */}
+      <div
+        style={{
+          borderTop: "1px solid rgba(0,0,0,0.1)",
+          marginTop: "25px",
+          paddingTop: "18px",
           textAlign: "center",
           fontSize: "0.9rem",
         }}
@@ -185,11 +200,10 @@ export default function Footer() {
           rel="noopener noreferrer"
           style={{ color: "#d1b76e", textDecoration: "none" }}
         >
-          GT Systems
+          GTSystems
         </a>
       </div>
 
-      {/* --- Responsive --- */}
       <style jsx>{`
         @media (max-width: 768px) {
           footer {

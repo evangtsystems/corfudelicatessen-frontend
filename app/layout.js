@@ -1,5 +1,7 @@
 import { CartProvider } from "../src/lib/cartContext";
 import ClientWrapper from "./client-wrapper";
+import CookieConsent from "../src/components/CookieConsent";
+
 
 export const metadata = {
   title: "Corfu Delicatessen",
@@ -20,7 +22,7 @@ export default function RootLayout({ children }) {
           padding: 0,
           width: "100%",
           
-         background: "#050e00ff",
+         background: "#f6faf3ff",
 
           overflowX: "hidden",
         }}
@@ -30,6 +32,7 @@ export default function RootLayout({ children }) {
         <CartProvider>
           <ClientWrapper>{children}</ClientWrapper>
         </CartProvider>
+       
       </body>
     </html>
   );
