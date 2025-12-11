@@ -1,11 +1,14 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { getApiBase } from "./apiBase";
 import { getToken, getTokenPayload } from "./auth";
 
 const CartContext = createContext(null);
 
+// -----------------------
+// SAFE LOCAL LOAD
+// -----------------------
 const loadCartSafe = () => {
   if (typeof window === "undefined") return [];
   try {
@@ -25,20 +28,49 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
 
+  // --- prevents race conditions ---
+  const isUpdating = useRef(false);
+  const updateQueue = useRef([]);
+  const lastSyncedCart = useRef(null);
+  const debounceTimer = useRef(null);
+
+  // -----------------------------------------
   // 1️⃣ Load user from token once
+  // -----------------------------------------
   useEffect(() => {
-    const payload = getTokenPayload();
-    setUser(payload || null);
+    setUser(getTokenPayload() || null);
   }, []);
 
-  // 2️⃣ Load local cart immediately on first mount
+  // -----------------------------------------
+  // 2️⃣ Load local cart immediately
+  // -----------------------------------------
   useEffect(() => {
     const local = loadCartSafe();
     setCartItems(local);
     setCartCount(calcCount(local));
+    lastSyncedCart.current = JSON.stringify(local);
   }, []);
 
-  // 3️⃣ If logged in → ALWAYS load cart from DB (NO MERGE)
+  // -----------------------------------------
+  // 3️⃣ Multi-TAB sync
+  // -----------------------------------------
+  useEffect(() => {
+    const sync = (e) => {
+      if (e.key === "cart") {
+        try {
+          const updated = JSON.parse(e.newValue || "[]");
+          setCartItems(updated);
+          setCartCount(calcCount(updated));
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+
+  // -----------------------------------------
+  // 4️⃣ When user logs in → load DB cart ALWAYS
+  // -----------------------------------------
   useEffect(() => {
     if (!user) return;
 
@@ -47,14 +79,13 @@ export function CartProvider({ children }) {
         const res = await fetch(`${getApiBase()}/api/cart`, {
           headers: { Authorization: `Bearer ${getToken()}` },
         });
-
         const dbCart = await res.json();
         const items = Array.isArray(dbCart) ? dbCart : [];
 
+        lastSyncedCart.current = JSON.stringify(items);
         setCartItems(items);
         setCartCount(calcCount(items));
         localStorage.setItem("cart", JSON.stringify(items));
-
       } catch (err) {
         console.error("❌ Failed to load DB cart:", err);
       }
@@ -63,13 +94,33 @@ export function CartProvider({ children }) {
     loadDBCart();
   }, [user]);
 
-  // 4️⃣ Global update function
-  const updateCartGlobal = async (newCart) => {
+  // -----------------------------------------
+  // 5️⃣ Safe Atomic Cart Update (race-proof)
+  // -----------------------------------------
+  const processQueue = async () => {
+    if (isUpdating.current) return;
+    isUpdating.current = true;
+
+    while (updateQueue.current.length > 0) {
+      const nextCart = updateQueue.current.shift();
+      await performCartUpdate(nextCart);
+    }
+
+    isUpdating.current = false;
+  };
+
+  const performCartUpdate = async (newCart) => {
+    // update UI
     setCartItems(newCart);
     setCartCount(calcCount(newCart));
     localStorage.setItem("cart", JSON.stringify(newCart));
 
-    if (user) {
+    // skip backend if not logged in
+    if (!user) return;
+
+    // debounce backend sync → reduce load
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(async () => {
       try {
         await fetch(`${getApiBase()}/api/cart`, {
           method: "POST",
@@ -79,15 +130,20 @@ export function CartProvider({ children }) {
           },
           body: JSON.stringify({ items: newCart }),
         });
+
+        lastSyncedCart.current = JSON.stringify(newCart);
       } catch (err) {
         console.error("❌ Failed to sync cart to DB:", err);
       }
-    }
+    }, 200); // 200ms = fast but safe
   };
 
-  const clearCart = async () => {
-    await updateCartGlobal([]);
+  const updateCartGlobal = async (newCart) => {
+    updateQueue.current.push(newCart);
+    await processQueue();
   };
+
+  const clearCart = async () => updateCartGlobal([]);
 
   return (
     <CartContext.Provider
