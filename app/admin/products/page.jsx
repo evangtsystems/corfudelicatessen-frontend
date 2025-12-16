@@ -708,6 +708,23 @@ useEffect(() => {
           👥 Χρήστες
         </button>
 
+
+        <button
+  onClick={() => (window.location.href = "/admin/orders")}
+  style={{
+    background: "#1f3b2e",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    padding: "8px 14px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  }}
+>
+  📦 Παραγγελίες
+</button>
+
+
                 {/* 🔐 Developer-only vault (second bin) */}
         {typeof window !== "undefined" &&
  localStorage.getItem("devMode") === "true" && (
