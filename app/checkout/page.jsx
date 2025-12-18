@@ -34,10 +34,13 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (data.success) {
-        // ✅ clear cart via context (NOT localStorage)
+        // ✅ CRITICAL: await FULL cart clear (state + storage + DB)
         await clearCart();
 
-        // ✅ redirect to success page
+        // ✅ close floating cart if open
+        window.dispatchEvent(new Event("close-cart"));
+
+        // ✅ redirect only AFTER cart is fully cleared
         window.location.href = `/order-success?orderId=${data.orderId || ""}`;
       } else {
         setMsg("❌ Failed to place order");

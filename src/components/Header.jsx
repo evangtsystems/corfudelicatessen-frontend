@@ -78,6 +78,31 @@ export default function Header() {
     loadCategories();
   }, []);
 
+  useEffect(() => {
+  const openCart = () => {
+    // Desktop only – mobile uses /cart page
+    if (window.innerWidth >= 768) {
+      setCartOpen(true);
+    } else {
+      window.location.href = "/cart";
+    }
+  };
+
+  window.addEventListener("open-cart", openCart);
+  return () => window.removeEventListener("open-cart", openCart);
+}, []);
+
+useEffect(() => {
+  const closeCart = () => {
+    setCartOpen(false);
+  };
+
+  window.addEventListener("close-cart", closeCart);
+  return () => window.removeEventListener("close-cart", closeCart);
+}, []);
+
+
+
   // 🔥 Sync header cart UI whenever cart changes anywhere
 
 
@@ -92,6 +117,9 @@ export default function Header() {
     setUser(null);
     router.push("/login");
   };
+
+  
+
 
   // ---------------- RENDER ----------------
   return (
@@ -159,26 +187,46 @@ export default function Header() {
           </Link>
 
           {user ? (
-            <>
-              <span style={{ color: "white", fontWeight: "bold" }}>
-                {user.role === "admin" ? "Admin" : "Client"}
-              </span>
+  <>
+    {/* ROLE */}
+    <span style={{ color: "white", fontWeight: "bold" }}>
+      {user.role === "admin" ? "Admin" : "Client"}
+    </span>
 
-              <span
-                onClick={handleLogout}
-                style={{
-                  color: "white",
-                  cursor: "pointer",
-                  padding: "6px 10px",
-                  background: "#d4a76a",
-                  borderRadius: "6px",
-                  fontWeight: "bold",
-                }}
-              >
-                Logout
-              </span>
-            </>
-          ) : (
+    {/* 👤 MY ORDERS (USER ONLY) */}
+    {user.role !== "admin" && (
+      <Link
+        href="/my-orders"
+        style={{
+          color: "white",
+          textDecoration: "none",
+          padding: "6px 10px",
+          borderRadius: "6px",
+          fontWeight: "bold",
+          background: pathname === "/my-orders" ? "#d4a76a" : "transparent",
+        }}
+      >
+        Οι παραγγελίες μου
+      </Link>
+    )}
+
+    {/* LOGOUT */}
+    <span
+      onClick={handleLogout}
+      style={{
+        color: "white",
+        cursor: "pointer",
+        padding: "6px 10px",
+        background: "#d4a76a",
+        borderRadius: "6px",
+        fontWeight: "bold",
+      }}
+    >
+      Logout
+    </span>
+  </>
+) : (
+
             <Link
               href="/login"
               style={{
@@ -319,23 +367,42 @@ export default function Header() {
               </Link>
             )}
 
-            {user && (
-              <div
-                style={{
-                  width: "100%",
-                  padding: "10px 20px",
-                  color: "white",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                }}
-                onClick={() => {
-                  setMenuOpen(false);
-                  handleLogout();
-                }}
-              >
-                Logout
-              </div>
-            )}
+           {user && user.role !== "admin" && (
+  <Link
+    href="/my-orders"
+    style={{
+      color: "white",
+      textDecoration: "none",
+      width: "100%",
+      padding: "10px 20px",
+      fontWeight: "bold",
+      display: "block",
+    }}
+    onClick={() => setMenuOpen(false)}
+  >
+    🧾 Οι παραγγελίες μου
+  </Link>
+)}
+
+{user && (
+  <div
+    style={{
+      width: "100%",
+      padding: "10px 20px",
+      color: "white",
+      cursor: "pointer",
+      fontWeight: "bold",
+    }}
+    onClick={() => {
+      setMenuOpen(false);
+      handleLogout();
+    }}
+  >
+    Logout
+  </div>
+)}
+
+            
 
             <div
   style={{

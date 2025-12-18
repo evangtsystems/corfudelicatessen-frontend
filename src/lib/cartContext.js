@@ -34,6 +34,9 @@ export function CartProvider({ children }) {
   const lastSyncedCart = useRef(null);
   const debounceTimer = useRef(null);
 
+  // ✅ NEW: queue also carries options
+  // item shape: { cart: [...], opts: { flushNow?: boolean } }
+
   // -----------------------------------------
   // 1️⃣ Load user from token once
   // -----------------------------------------
@@ -102,15 +105,16 @@ export function CartProvider({ children }) {
     isUpdating.current = true;
 
     while (updateQueue.current.length > 0) {
-      const nextCart = updateQueue.current.shift();
-      await performCartUpdate(nextCart);
+      const next = updateQueue.current.shift();
+      await performCartUpdate(next.cart, next.opts);
     }
 
     isUpdating.current = false;
   };
 
-  const performCartUpdate = async (newCart) => {
-    // update UI
+  // ✅ NEW: opts.flushNow => immediately sync to DB and await it (no debounce)
+  const performCartUpdate = async (newCart, opts = {}) => {
+    // update UI + local storage immediately
     setCartItems(newCart);
     setCartCount(calcCount(newCart));
     localStorage.setItem("cart", JSON.stringify(newCart));
@@ -118,7 +122,31 @@ export function CartProvider({ children }) {
     // skip backend if not logged in
     if (!user) return;
 
-    // debounce backend sync → reduce load
+    // If we want instant sync (checkout / clear cart)
+    if (opts.flushNow) {
+      // cancel any pending debounced sync
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = null;
+
+      try {
+        await fetch(`${getApiBase()}/api/cart`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
+          },
+          body: JSON.stringify({ items: newCart }),
+        });
+
+        lastSyncedCart.current = JSON.stringify(newCart);
+      } catch (err) {
+        console.error("❌ Failed to sync cart to DB (flushNow):", err);
+      }
+
+      return;
+    }
+
+    // Normal debounced backend sync
     clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(async () => {
       try {
@@ -135,15 +163,17 @@ export function CartProvider({ children }) {
       } catch (err) {
         console.error("❌ Failed to sync cart to DB:", err);
       }
-    }, 200); // 200ms = fast but safe
+    }, 200);
   };
 
-  const updateCartGlobal = async (newCart) => {
-    updateQueue.current.push(newCart);
+  // ✅ NEW: updateCartGlobal accepts options
+  const updateCartGlobal = async (newCart, opts = {}) => {
+    updateQueue.current.push({ cart: newCart, opts });
     await processQueue();
   };
 
-  const clearCart = async () => updateCartGlobal([]);
+  // ✅ NEW: clearCart forces immediate backend clear and awaits it
+  const clearCart = async () => updateCartGlobal([], { flushNow: true });
 
   return (
     <CartContext.Provider
