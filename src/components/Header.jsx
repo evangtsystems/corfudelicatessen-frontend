@@ -604,7 +604,7 @@ useEffect(() => {
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ fontSize: "1.1rem" }}>📞</span>
             <a href="tel:+302661012345" style={{ color: "#fff", textDecoration: "none", fontWeight: "bold" }}>
-              +30 26610 12345
+              +30 26630 22701
             </a>
           </div>
           <span style={{ color: "#aaa" }}>|</span>

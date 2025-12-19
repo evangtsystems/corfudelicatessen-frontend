@@ -63,4 +63,5 @@ export default function CinematicIntro({ onFinish }) {
   }, [onFinish]);
 
   return null;
+
 }

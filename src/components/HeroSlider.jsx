@@ -21,7 +21,7 @@ const images = [
 
 export default function HeroSlider() {
   return (
-    <div style={{ width: "100%", background: "#fff" }}>
+    <div style={{ width: "100%", overflow: "hidden" }}>
       <Swiper
         modules={[Autoplay, EffectFade, Pagination]}
         effect="fade"
@@ -40,19 +40,16 @@ export default function HeroSlider() {
               style={{
                 width: "100%",
                 height: "420px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "#fff",
               }}
             >
               <img
                 src={src}
                 alt={`Brand slide ${i + 1}`}
                 style={{
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  objectFit: "contain",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",   // 🔥 KEY CHANGE
+                  display: "block",     // 🔥 removes inline gaps
                 }}
               />
             </div>

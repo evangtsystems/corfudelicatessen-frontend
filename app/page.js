@@ -8,6 +8,8 @@ import LogoIntroStrip from "../src/components/LogoIntroStrip";
 import CinematicIntro from "../src/components/CinematicIntro";
 import { useIntro } from "../src/lib/IntroContext";
 import { useRef } from "react";
+import WhatsAppChat from "../src/components/WhatsAppChat";
+
 
 
 
@@ -21,6 +23,22 @@ export default function HomePage() {
   };
 
 
+const [headerOffset, setHeaderOffset] = useState(0);
+
+useEffect(() => {
+  const measure = () => {
+    const header = document.getElementById("global-header");
+    setHeaderOffset(header ? header.getBoundingClientRect().height : 0);
+  };
+
+  measure();
+  window.addEventListener("resize", measure);
+  return () => window.removeEventListener("resize", measure);
+}, []);
+
+
+
+
   const { introDone, setIntroDone } = useIntro();
 
   const [logoDone, setLogoDone] = useState(false);
@@ -28,7 +46,43 @@ export default function HomePage() {
   
   const handleLogoFinish = () => setLogoDone(true);
 
-  const cinematicActive = logoDone && !introDone;
+  const isMobile =
+  typeof window !== "undefined" && window.innerWidth < 900;
+
+const cinematicActive = logoDone && !introDone;
+
+  const heroCinematicStyle = cinematicActive
+  ? {
+      position: "fixed",
+      inset: 0,
+      zIndex: 9999, // below cart/menu, above content
+      background: theme.bg,
+
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "flex-start",
+
+      // 🔥 THIS IS THE KEY FIX
+      paddingTop: `calc(${headerOffset}px + 6vh)`,
+      paddingBottom: "14vh",
+      paddingLeft: 18,
+      paddingRight: 18,
+
+      overflowY: "auto",
+      WebkitOverflowScrolling: "touch",
+    }
+  : {
+      position: "relative",
+      zIndex: 10,
+    };
+
+
+
+
+
+
+
 
 
   // 🎬 TRUE when cinematic is running (after logo, before introDone)
@@ -44,7 +98,7 @@ export default function HomePage() {
 
 
  
-const sliderRef = useRef(null);
+
 
 
 
@@ -56,18 +110,7 @@ const sliderRef = useRef(null);
 
 
 
-useEffect(() => {
-  if (!introDone) return;
 
-  const t = setTimeout(() => {
-    sliderRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }, 450);
-
-  return () => clearTimeout(t);
-}, [introDone]);
 
 
 
@@ -136,46 +179,114 @@ return (
 
 
 
-        {/* Dark overlay */}
+       
+        <section
+  
+  style={{
+    ...hideNonCinematicStyle,
+    
+    position: "relative",
+    zIndex: 1,
+    padding: "28px 0 12px",
+    background: "linear-gradient(180deg, #0b0e1b, #070815)",
+    borderTop: "1px solid rgba(255,255,255,0.06)",
+    borderBottom: "1px solid rgba(255,255,255,0.06)",
+  }}
+>
+
         <div
           style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "radial-gradient(circle at center, rgba(0,0,0,0.12), rgba(0,0,0,0.55))",
-            zIndex: 2,
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "0 18px",
+            boxSizing: "border-box",
           }}
-        />
-      
+        >
+          <div
+            style={{
+    display: "flex",
+    flexDirection: "row",
+    gap: cinematicActive ? 0 : 32,
+    alignItems: "center",
+    justifyContent: cinematicActive ? "center" : "space-between",
+    paddingTop: 10,
+    paddingBottom: 22,
+  }}
+>
+          
+            <div style={{ fontWeight: 900, fontSize: 16, color: "#fffdf5" }}>
+              Συνεργαζόμαστε με κορυφαίους παραγωγούς
+            </div>
+            <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.55)" }}>
+              Brands που εμπιστεύονται οι επαγγελματίες
+            </div>
+          </div>
+
+          <div
+            style={{
+              borderRadius: 18,
+              border: "1px solid rgba(255,255,255,0.08)",
+              background: "transparent",
+              padding: "0",
+              overflow: "hidden",
+            }}
+          >
+           
+  <HeroSlider />
+
+
+          </div>
+        </div>
+      </section>
 
       {/* ================= HERO CONTENT ================= */}
-      <section
-        style={{
-          position: "relative",
-          zIndex: 3,
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: "28px 18px 26px",
-          boxSizing: "border-box",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-        }}
-      >
+     <section style={heroCinematicStyle}>
+  <div
+    style={{
+      width: "100%",
+      maxWidth: 1200,
+      margin: "0 auto",
+      padding: "0 18px",
+
+      
+
+
+
+      transition: "transform 0.6s ease",
+    }}
+  >
+
+
+
         <main
           style={{
             display: "flex",
             flexDirection: "row",
             gap: 32,
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingTop: 10,
-            paddingBottom: 22,
+             alignItems: "flex-start",
+    justifyContent: cinematicActive ? "flex-start" : "space-between",
+            // ✅ padding belongs HERE
+     width: "100%",
+    maxWidth: 1200,
+    margin: "0 auto",
           }}
         >
           {/* LEFT */}
-          <div style={{ flex: 1.15, minWidth: 0 }}>
+          {/* LEFT */}
+<div
+  style={{
+  flex: 1.15,
+  minWidth: 0,
+  maxWidth: 720,
+
+  marginLeft: cinematicActive ? "auto" : 0,
+  marginRight: cinematicActive ? "auto" : 0,
+
+  
+}}
+
+>
+
             {/* ✅ hide this pill during cinematic */}
             <div
               style={{
@@ -207,6 +318,7 @@ return (
                 fontSize: "clamp(30px, 4.2vw, 44px)",
                 lineHeight: 1.12,
                 margin: 0,
+                marginBottom: cinematicActive ? 28 : 12, // 👈 MORE SPACE
                 color: "#fffdf5",
                 textShadow: "0 12px 28px rgba(0,0,0,0.65)",
                 position: "relative",
@@ -233,7 +345,7 @@ return (
               style={{
                
                 marginTop: 12,
-                marginBottom: 14,
+                marginBottom: cinematicActive ? 32 : 14, // 👈 MORE AIR
                 fontSize: 15,
                 lineHeight: 1.7,
                 maxWidth: 560,
@@ -251,33 +363,83 @@ return (
             </p>
 
             <div
-              data-focus="logistics"
-              style={{
-                
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "10px 14px",
-                borderRadius: 14,
-                border: "1px solid rgba(209,183,110,0.22)",
-                background: "rgba(0,0,0,0.35)",
-                color: "rgba(245,245,245,0.95)",
-                fontSize: 13.5,
-                marginBottom: 16,
-                boxShadow: "0 10px 28px rgba(0,0,0,0.35)",
-                position: "relative",
-                zIndex: 20,
+  data-focus="logistics"
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 18,
+    padding: "14px 22px",
+    borderRadius: 16,
+    border: "1px solid rgba(209,183,110,0.35)",
+    background:
+      "linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.25))",
+    boxShadow:
+      "0 18px 46px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(209,183,110,0.08)",
+  }}
+>
+  {/* ICON */}
+  <div
+    style={{
+      fontSize: 22,
+      lineHeight: 1,
+      opacity: 0,
+      animation: "fadeUp 0.4s ease forwards",
+    }}
+  >
+    🚚
+  </div>
 
-                
-                transition: "none",
-              }}
-            >
-              <span style={{ fontSize: 16 }}>🚚</span>
-              <span style={{ fontWeight: 800, color: theme.accent }}>
-                Παραγγελία σήμερα ·
-              </span>
-              <span>Παράδοση αύριο σε όλη την Κέρκυρα</span>
-            </div>
+  {/* TEXT */}
+  <div style={{ display: "flex", flexDirection: "column" }}>
+    <span
+      style={{
+        fontSize: 13,
+        fontWeight: 600,
+        color: "rgba(245,245,245,0.75)",
+        letterSpacing: 0.4,
+        opacity: 0,
+        animation: "fadeUp 0.4s ease forwards",
+        animationDelay: "0.1s",
+      }}
+    >
+      Παραγγέλνεις σήμερα.
+    </span>
+
+    <span
+      style={{
+        fontSize: 20,
+        fontWeight: 900,
+        color: theme.accent,
+        letterSpacing: 0.8,
+        lineHeight: 1.05,
+        marginTop: 4,
+        opacity: 0,
+        animation: "accentIn 0.5s ease forwards",
+        animationDelay: "0.25s",
+        textShadow:
+          "0 0 26px rgba(209,183,110,0.85), 0 8px 28px rgba(0,0,0,0.6)",
+      }}
+    >
+      Το έχεις σήμερα.
+    </span>
+
+    <span
+      style={{
+        fontSize: 12.5,
+        marginTop: 4,
+        color: "rgba(245,245,245,0.6)",
+        opacity: 0,
+        animation: "fadeUp 0.4s ease forwards",
+        animationDelay: "0.45s",
+      }}
+    >
+      Σε όλη την Κέρκυρα.
+    </span>
+  </div>
+</div>
+
+
+
 
             {/* ✅ hide CTAs during cinematic */}
             <div
@@ -383,18 +545,19 @@ return (
           </div>
 
           {/* RIGHT CARD (hide during cinematic) */}
-          <div style={{ ...hideNonCinematicStyle, flex: 0.9, minWidth: 260, maxWidth: 390 }}>
-            <div
-              style={{
-                borderRadius: 22,
-                padding: 18,
-                background: theme.card,
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow:
-                  "0 18px 52px rgba(0,0,0,0.85), 0 0 40px rgba(209,183,110,0.18)",
-                backdropFilter: "blur(14px)",
-              }}
-            >
+         {!cinematicActive &&  (
+  <div style={{ flex: 0.9, minWidth: 260, maxWidth: 390 }}>
+    <div
+      style={{
+        borderRadius: 22,
+        padding: 18,
+        background: theme.card,
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow:
+          "0 18px 52px rgba(0,0,0,0.85), 0 0 40px rgba(209,183,110,0.18)",
+        backdropFilter: "blur(14px)",
+      }}
+    >
               <div
                 style={{
                   display: "flex",
@@ -494,6 +657,7 @@ return (
               </button>
             </div>
           </div>
+          )}
         </main>
 
         {/* TRUST STRIP (hide during cinematic) */}
@@ -517,6 +681,7 @@ return (
             { icon: "🧊", text: "Ιδιόκτητα φορτηγά-ψυγεία" },
             { icon: "🏨", text: "HORECA πελάτες σε όλη την Κέρκυρα" },
             { icon: "📞", text: "Άμεση επικοινωνία" },
+           
           ].map((x) => (
             <div
               key={x.text}
@@ -539,7 +704,7 @@ return (
             </div>
           ))}
         </div>
-
+{!cinematicActive && <WhatsAppChat />}
         {/* FOOTER LINE (hide during cinematic) */}
         <div
           style={{
@@ -558,65 +723,11 @@ return (
           <span>© {new Date().getFullYear()} Corfu Delicatessen · Κέρκυρα</span>
           <span>Τηλ. παραγγελιών &amp; πληροφορίες διαθέσιμα κατόπιν επικοινωνίας</span>
         </div>
+        </div>
       </section>
 
       {/* ================= BRAND SLIDER SECTION ================= */}
-      <section
-  ref={sliderRef}
-  style={{
-    ...hideNonCinematicStyle,
-    scrollMarginTop: 280,
-    position: "relative",
-    zIndex: 4,
-    padding: "28px 0 40px",
-    background: "linear-gradient(180deg, #0b0e1b, #070815)",
-    borderTop: "1px solid rgba(255,255,255,0.06)",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-  }}
->
-
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            padding: "0 18px",
-            boxSizing: "border-box",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-              justifyContent: "space-between",
-              gap: 12,
-              marginBottom: 10,
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ fontWeight: 900, fontSize: 16, color: "#fffdf5" }}>
-              Συνεργαζόμαστε με κορυφαίους παραγωγούς
-            </div>
-            <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.55)" }}>
-              Brands που εμπιστεύονται οι επαγγελματίες
-            </div>
-          </div>
-
-          <div
-            style={{
-              borderRadius: 18,
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(0,0,0,0.22)",
-              padding: "14px 14px",
-              overflow: "hidden",
-            }}
-          >
-           
-  <HeroSlider />
-
-
-          </div>
-        </div>
-      </section>
+    
 
       {/* MOBILE tweaks */}
       <style jsx global>{`
@@ -627,6 +738,31 @@ return (
           }
         }
       `}</style>
+      <style jsx>{`
+      @keyframes fadeUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes accentIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes logiIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`}</style>
     </div>
   );
 }
