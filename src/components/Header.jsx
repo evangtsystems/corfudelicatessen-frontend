@@ -62,6 +62,21 @@ export default function Header() {
     return () => clearTimeout(timeout);
   }, [search, pathname, router]);
 
+  useEffect(() => {
+  if (!showProducts) return;
+
+  const handleClickOutside = (e) => {
+    // close if clicking anywhere except inside the dropdown trigger area
+    if (!e.target.closest("[data-products-dropdown]")) {
+      setShowProducts(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, [showProducts]);
+
+
   // LOAD CATEGORIES
   React.useEffect(() => {
     async function loadCategories() {
@@ -476,7 +491,11 @@ useEffect(() => {
           </Link>
 
           {/* ✅ PRODUCTS dropdown */}
-          <div style={{ position: "relative", zIndex: 10000 }}>
+         <div
+  style={{ position: "relative", zIndex: 10000 }}
+  data-products-dropdown
+>
+
   <span
   style={{
     color: "#fff",
@@ -517,6 +536,22 @@ useEffect(() => {
                 transition: "opacity 0.35s ease, transform 0.35s ease",
               }}
             >
+              {/* Close button */}
+<div
+  style={{
+    position: "absolute",
+    top: 12,
+    right: 20,
+    fontSize: "22px",
+    cursor: "pointer",
+    fontWeight: "bold",
+    color: "#2c1810",
+  }}
+  onClick={() => setShowProducts(false)}
+>
+  ✕
+</div>
+
               {Object.entries(categories).map(([mainCat, subs]) => (
                 <div
                   key={mainCat}

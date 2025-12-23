@@ -182,34 +182,49 @@ export default function Footer() {
 
       {/* --- COPYRIGHT BAR --- */}
       <div
-        style={{
-          borderTop: "1px solid rgba(255,255,255,0.25)",
-          marginTop: "25px",
-          paddingTop: "18px",
-          textAlign: "center",
-          fontSize: "0.9rem",
-          color: "rgba(245,245,240,0.7)",
-        }}
-      >
-        © {new Date().getFullYear()}{" "}
-        <a
-          href="https://corfudelicatessen.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "#d1b76e", textDecoration: "none" }}
-        >
-          Corfu Delicatessen
-        </a>{" "}
-        — Designed & Hosted by{" "}
-        <a
-          href="https://www.gtsystems.gr"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "#d1b76e", textDecoration: "none" }}
-        >
-          GTSystems
-        </a>
-      </div>
+  style={{
+    borderTop: "1px solid rgba(255,255,255,0.25)",
+    marginTop: "20px",
+    paddingTop: "14px",
+    textAlign: "center",
+    fontSize: "1.05rem", // ⬅ bigger text
+    color: "rgba(245,245,240,0.7)",
+  }}
+>
+  © {new Date().getFullYear()}{" "}
+  <a
+    href="https://corfudelicatessen.com/"
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{ color: "#d1b76e", textDecoration: "none" }}
+  >
+    Corfu Delicatessen
+  </a>{" "}
+  — Designed & Hosted by{" "}
+  <a
+    href="https://www.gtsystems.gr"
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      marginLeft: "8px",
+      position: "relative",
+      top: "11px", // ⬅ re-balanced for new size
+    }}
+  >
+    <img
+      src="https://gtsystems.gr/gtswh.gif"
+      alt="GTSystems"
+      style={{
+        height: "34px", // ⬅ bigger logo
+        objectFit: "contain",
+        display: "block",
+      }}
+    />
+  </a>
+</div>
+
 
       <style jsx>{`
         @media (max-width: 768px) {
