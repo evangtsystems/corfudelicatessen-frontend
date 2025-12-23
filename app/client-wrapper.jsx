@@ -17,7 +17,7 @@ export default function ClientWrapper({ children }) {
       {!isAdmin && <Toaster position="bottom-center" />}
 
       {/* ✅ NORMAL DOCUMENT FLOW */}
-      <main style={{ padding: 20 }}>
+      <main style={{ padding: 0 }}>
         {children}
       </main>
 

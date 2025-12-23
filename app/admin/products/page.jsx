@@ -47,7 +47,8 @@ const [filteredProducts, setFilteredProducts] = useState([]);
     description: "",
     mainCategory: "",
     category: "",
-    href: "",
+    legacyHref: "",
+
     price: "",
     imageFile: null,
 });
@@ -101,7 +102,8 @@ useEffect(() => {
     description: "",
     mainCategory: "",
     category: "",
-    href: "",
+    legacyHref: "",
+
     imageUrl: "",
     price: "",
     imageFile: null,
@@ -287,7 +289,8 @@ useEffect(() => {
         description: p.description || "",
         mainCategory: p.mainCategory || "",
         category: p.category || "",
-        href: p.href || "",
+    legacyHref: p.legacyHref || "",
+
         price: p.price || "",
         imageUrl: p.imageUrl || p.img || "",
         imageFile: null,
@@ -307,7 +310,8 @@ const save = async (e) => {
   f.append("description", form.description || "");
   f.append("mainCategory", form.mainCategory || "");
   f.append("category", form.category || "");
-  f.append("href", form.href || "");
+f.append("legacyHref", form.legacyHref || "");
+
   f.append("price", form.price || "");
 
   if (form.imageFile) f.append("image", form.imageFile);
@@ -341,7 +345,7 @@ const save = async (e) => {
       description: "",
       mainCategory: "",
       category: "",
-      href: "",
+      legacyHref: "",
       price: "",
       imageFile: null,
     });
@@ -493,7 +497,7 @@ const save = async (e) => {
       description: p.description || "",
       mainCategory: p.mainCategory || "",
       category: p.category || "",
-      href: p.href || "",
+      legacyHref: p.legacyHref || "",
       imageUrl: p.imageUrl || "",
 imageFile: null,
 
@@ -513,7 +517,8 @@ const saveEdit = async (id) => {
   const f = new FormData();
   f.append("name", editForm.name);
   f.append("description", editForm.description || "");
-  f.append("href", editForm.href || "");
+ f.append("legacyHref", editForm.legacyHref || "");
+
   f.append("price", editForm.price || "");
   f.append("mainCategory", editForm.mainCategory || "");
   f.append("category", editForm.category || "");
@@ -918,7 +923,8 @@ useEffect(() => {
   >
     {editInput("name", "Name")}
     {editInput("description", "Description")}
-    {editInput("href", "Product URL (href)")}
+    {editInput("legacyHref", "Legacy WP URL (optional)")}
+
    {/* MAIN CATEGORY DROPDOWN */}
 {mainCategories.length > 0 ? (
   <select

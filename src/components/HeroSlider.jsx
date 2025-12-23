@@ -6,18 +6,11 @@ import "swiper/css";
 import "swiper/css/effect-fade";
 import "swiper/css/pagination";
 
-const images = [
-  "https://corfudelicatessen.com/wp-content/uploads/2022/03/sl1-latteria-sorrentina.webp",
-  "https://corfudelicatessen.com/wp-content/uploads/2022/03/sl2-divella.webp",
-  "https://corfudelicatessen.com/wp-content/uploads/2022/03/sl3-rummo.webp",
-  "https://corfudelicatessen.com/wp-content/uploads/2022/03/sl4-dececco.webp",
-  "https://corfudelicatessen.com/wp-content/uploads/2022/03/sl5-barilla.webp",
-  "https://corfudelicatessen.com/wp-content/uploads/2022/03/sl6-caputto.webp",
-  "https://corfudelicatessen.com/wp-content/uploads/2022/03/sl7-le5stagioni.webp",
-  "https://corfudelicatessen.com/wp-content/uploads/2022/03/sl8-divellafarina.webp",
-  "https://corfudelicatessen.com/wp-content/uploads/2022/03/sl9-bunge.webp",
-  "https://corfudelicatessen.com/wp-content/uploads/2022/03/sl10-sellas.webp",
-];
+const images = Array.from({ length: 10 }, (_, i) =>
+  `https://delicatessenimages.blob.core.windows.net/hero/hero-${String(i + 1).padStart(2, "0")}.webp`
+);
+
+
 
 export default function HeroSlider() {
   return (

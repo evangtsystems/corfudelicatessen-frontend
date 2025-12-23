@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getApiBase } from "../../src/lib/apiBase";
+import Link from "next/link";
+
 
 const theme = { primary: "#1f3b2e", accent: "#d1b76e" };
 
@@ -152,74 +154,76 @@ export default function ProductsPage() {
           }}
         >
           {filteredProducts.map((p) => (
-            <div
-              key={p._id}
-              style={{
-                background: "#fafafa",
-                borderRadius: "10px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                padding: "12px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <div
-                style={{
-                  width: "100%",
-                  height: "160px",
-                  background: "#fff",
-                  borderRadius: "8px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                }}
-              >
-                {p.img || p.image || p.imageUrl ? (
-                  <img
-                    src={p.img || p.image || p.imageUrl}
-                    alt={p.name || "Product"}
-                    style={{
-                      maxHeight: "100%",
-                      maxWidth: "100%",
-                      objectFit: "contain",
-                    }}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/placeholder.jpg";
-                    }}
-                  />
-                ) : (
-                  <span style={{ color: "#999" }}>No Image</span>
-                )}
-              </div>
+  <Link
+    key={p._id}
+    href={`/product/${p.slug}`}
+    style={{ textDecoration: "none", color: "inherit" }}
+  >
+    <div
+      style={{
+        background: "#fafafa",
+        borderRadius: "10px",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+        padding: "12px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          height: "160px",
+          background: "#fff",
+          borderRadius: "8px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+        }}
+      >
+        {p.imageUrl ? (
+          <img
+            src={p.imageUrl}
+            alt={p.name || "Product"}
+            style={{
+              maxHeight: "100%",
+              maxWidth: "100%",
+              objectFit: "contain",
+            }}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/placeholder.jpg";
+            }}
+          />
+        ) : (
+          <span style={{ color: "#999" }}>No Image</span>
+        )}
+      </div>
 
-              <h3
-                style={{
-                  color: theme.primary,
-                  marginTop: "10px",
-                  textAlign: "center",
-                }}
-              >
-                {p.name}
-              </h3>
+      <h3
+        style={{
+          color: theme.primary,
+          marginTop: "10px",
+          textAlign: "center",
+        }}
+      >
+        {p.name}
+      </h3>
 
-              <div
-                style={{
-                  fontWeight: "bold",
-                  color: theme.accent,
-                  marginTop: "6px",
-                }}
-              >
-                {p.price
-                  ? (parseFloat(
-                      p.price.replace(/[^\d.,]/g, "").replace(",", ".")
-                    ) || 0).toFixed(2) + " €"
-                  : "—"}
-              </div>
-            </div>
-          ))}
+      <div
+        style={{
+          fontWeight: "bold",
+          color: theme.accent,
+          marginTop: "6px",
+        }}
+      >
+        {typeof p.price === "number" ? p.price.toFixed(2) + " €" : "—"}
+      </div>
+    </div>
+  </Link>
+))}
+
         </div>
       )}
 

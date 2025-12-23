@@ -9,6 +9,8 @@ import CinematicIntro from "../src/components/CinematicIntro";
 import { useIntro } from "../src/lib/IntroContext";
 import { useRef } from "react";
 import WhatsAppChat from "../src/components/WhatsAppChat";
+import BrandLogoSlider from "../src/components/BrandLogoSlider";
+
 
 
 
@@ -726,7 +728,67 @@ return (
         </div>
       </section>
 
+      
+
       {/* ================= BRAND SLIDER SECTION ================= */}
+      {/* ================= BRAND OVERLAY SECTION ================= */}
+<section
+  style={{
+    position: "relative",
+    zIndex: 2,
+    background:
+      "linear-gradient(180deg, #070815 0%, #0b0e1b 55%, #d1b76e 140%)",
+    padding: "80px 18px",
+  }}
+>
+
+  <div
+  style={{
+    maxWidth: 1000,
+    margin: "0 auto",      // 🔥 THIS is the fix
+    textAlign: "center",
+    color: "#fffdf5",
+  }}
+>
+
+    <div
+      style={{
+        letterSpacing: 2,
+        fontSize: 12,
+        color: "rgba(209,183,110,0.85)",
+        marginBottom: 12,
+      }}
+    >
+      CORFU DELICATESSEN
+    </div>
+
+    <h2
+      style={{
+        fontSize: "clamp(28px, 4vw, 42px)",
+        fontWeight: 900,
+        lineHeight: 1.15,
+        margin: 0,
+      }}
+    >
+      Η ποιότητα που ξεχωρίζει{" "}
+      <span style={{ color: "#d1b76e" }}>στην πράξη.</span>
+    </h2>
+
+    <p
+      style={{
+        marginTop: 18,
+        fontSize: 15,
+        color: "rgba(245,245,245,0.75)",
+      }}
+    >
+      Επιλεγμένοι προμηθευτές, άμεση διανομή και σταθερή ποιότητα για
+      επαγγελματίες που δεν κάνουν εκπτώσεις.
+    </p>
+    <BrandLogoSlider />
+
+  </div>
+</section>
+
     
 
       {/* MOBILE tweaks */}
@@ -760,6 +822,11 @@ return (
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+    @media (max-width: 768px) {
+    section {
+      padding: 60px 14px;
     }
   }
 `}</style>

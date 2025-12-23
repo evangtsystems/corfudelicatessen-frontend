@@ -5,10 +5,9 @@ export default function Footer() {
   return (
     <footer
       style={{
-        background: "#fff",
-        color: "#1f1b1bff",
+        background: "#4c6908ff",
+        color: "rgba(245,245,240,0.85)",
         padding: "40px 20px 20px",
-        marginTop: "60px",
       }}
     >
       {/* --- TOP GRID --- */}
@@ -29,13 +28,16 @@ export default function Footer() {
             style={{ width: "160px", marginBottom: "15px" }}
           />
 
-          <p style={{ margin: "6px 0" }}>
+          <p style={{ margin: "6px 0", color: "rgba(245,245,240,0.85)" }}>
             📍{" "}
             <a
               href="https://www.google.com/maps/place/39%C2%B040'51.8%22N+19%C2%B047'50.6%22E"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "#0e0c0cff", textDecoration: "none" }}
+              style={{
+                color: "#ffffff",
+                textDecoration: "none",
+              }}
             >
               Εθνική Παλαιοκαστρίτσας, Θέση Σγόμπου
             </a>
@@ -45,7 +47,10 @@ export default function Footer() {
             📧{" "}
             <a
               href="mailto:info@corfudelicatessen.com"
-              style={{ color: "#0f0e0eff", textDecoration: "none" }}
+              style={{
+                color: "#ffffff",
+                textDecoration: "none",
+              }}
             >
               info@corfudelicatessen.com
             </a>
@@ -56,26 +61,24 @@ export default function Footer() {
         <div>
           <h3 style={{ color: "#d1b76e" }}>ΚΑΤΗΓΟΡΙΕΣ</h3>
           <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
-            <li>
-              <Link href="/company" style={{ color: "#0a0a0aff", textDecoration: "none" }}>
-                Εταιρεία
-              </Link>
-            </li>
-            <li>
-              <Link href="/products" style={{ color: "#0f0f0fff", textDecoration: "none" }}>
-                Προϊόντα
-              </Link>
-            </li>
-            <li>
-              <Link href="/contact" style={{ color: "#080808ff", textDecoration: "none" }}>
-                Επικοινωνία
-              </Link>
-            </li>
-            <li>
-              <Link href="/privacy-policy" style={{ color: "#0c0c0cff", textDecoration: "none" }}>
-                Πολιτική Απορρήτου
-              </Link>
-            </li>
+            {[
+              { href: "/company", label: "Εταιρεία" },
+              { href: "/products", label: "Προϊόντα" },
+              { href: "/contact", label: "Επικοινωνία" },
+              { href: "/privacy-policy", label: "Πολιτική Απορρήτου" },
+            ].map((item) => (
+              <li key={item.href} style={{ marginBottom: 6 }}>
+                <Link
+                  href={item.href}
+                  style={{
+                    color: "rgba(245,245,240,0.85)",
+                    textDecoration: "none",
+                  }}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
@@ -83,33 +86,31 @@ export default function Footer() {
         <div>
           <h3 style={{ color: "#d1b76e" }}>ΠΡΟΪΟΝΤΑ</h3>
           <ul style={{ listStyle: "none", padding: 0, marginTop: "10px" }}>
-            <li>
-              <Link href="/shop?mainCategory=Αλλαντικά" style={{ color: "#0c0c0c", textDecoration: "none" }}>
-                Αλλαντικά
-              </Link>
-            </li>
-            <li>
-              <Link href="/shop?mainCategory=Κατεψυγμένα Τρόφιμα" style={{ color: "#0e0d0d", textDecoration: "none" }}>
-                Κατεψυγμένα Τρόφιμα
-              </Link>
-            </li>
-            <li>
-              <Link href="/shop?mainCategory=Τρόφιμα" style={{ color: "#0a0a0a", textDecoration: "none" }}>
-                Τρόφιμα
-              </Link>
-            </li>
-            <li>
-              <Link href="/shop?mainCategory=Τυροκομικά" style={{ color: "#0e0d0d", textDecoration: "none" }}>
-                Τυροκομικά
-              </Link>
-            </li>
+            {[
+              "Αλλαντικά",
+              "Κατεψυγμένα Τρόφιμα",
+              "Τρόφιμα",
+              "Τυροκομικά",
+            ].map((cat) => (
+              <li key={cat} style={{ marginBottom: 6 }}>
+                <Link
+                  href={`/shop?mainCategory=${cat}`}
+                  style={{
+                    color: "rgba(245,245,240,0.85)",
+                    textDecoration: "none",
+                  }}
+                >
+                  {cat}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
         {/* Column 4 */}
         <div>
           <h3 style={{ color: "#d1b76e" }}>NEWSLETTER</h3>
-          <p style={{ marginTop: "10px" }}>
+          <p style={{ marginTop: "10px", color: "rgba(245,245,240,0.75)" }}>
             Εισάγετε το email σας για να είστε ενημερωμένοι.
           </p>
           <form
@@ -132,7 +133,7 @@ export default function Footer() {
               type="submit"
               style={{
                 background: "#d1b76e",
-                color: "#1f3b2e",
+                color: "#2b1c10",
                 border: "none",
                 borderRadius: "6px",
                 padding: "8px 12px",
@@ -155,33 +156,39 @@ export default function Footer() {
           gap: "12px",
           marginTop: "35px",
           fontSize: "0.9rem",
+          color: "rgba(245,245,240,0.7)",
         }}
       >
-        <Link href="/privacy-policy" style={{ color: "#1f1b1b", textDecoration: "none" }}>
-          Πολιτική Απορρήτου
-        </Link>
-        <span style={{ color: "#777" }}>|</span>
-        <Link href="/cookies-policy" style={{ color: "#1f1b1b", textDecoration: "none" }}>
-          Πολιτική Cookies
-        </Link>
-        <span style={{ color: "#777" }}>|</span>
-        <Link href="/terms" style={{ color: "#1f1b1b", textDecoration: "none" }}>
-          Όροι & Προϋποθέσεις
-        </Link>
-        <span style={{ color: "#777" }}>|</span>
-        <Link href="/impresuum" style={{ color: "#1f1b1b", textDecoration: "none" }}>
-          Νομικές Πληροφορίες
-        </Link>
+        {[
+          { href: "/privacy-policy", label: "Πολιτική Απορρήτου" },
+          { href: "/cookies", label: "Πολιτική Cookies" },
+          { href: "/terms", label: "Όροι & Προϋποθέσεις" },
+          { href: "/impresuum", label: "Νομικές Πληροφορίες" },
+        ].map((item, i) => (
+          <span key={item.href}>
+            <Link
+              href={item.href}
+              style={{
+                color: "rgba(245,245,240,0.75)",
+                textDecoration: "none",
+              }}
+            >
+              {item.label}
+            </Link>
+            {i < 3 && <span style={{ margin: "0 8px", opacity: 0.4 }}>|</span>}
+          </span>
+        ))}
       </div>
 
       {/* --- COPYRIGHT BAR --- */}
       <div
         style={{
-          borderTop: "1px solid rgba(0,0,0,0.1)",
+          borderTop: "1px solid rgba(255,255,255,0.25)",
           marginTop: "25px",
           paddingTop: "18px",
           textAlign: "center",
           fontSize: "0.9rem",
+          color: "rgba(245,245,240,0.7)",
         }}
       >
         © {new Date().getFullYear()}{" "}
