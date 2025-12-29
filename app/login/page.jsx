@@ -133,11 +133,25 @@ export default function LoginPage() {
         </div>
       )}
 
-      <p style={{ marginTop: 8, textAlign: "center" }}>
-        <a href="/register" style={{ color: "#1f3b2e" }}>
-          Create an account
-        </a>
-      </p>
+      <p style={{ marginTop: 10, textAlign: "center", fontSize: "0.9rem" }}>
+  <a
+    href="/forgot-password"
+    style={{
+      color: "#d1b76e",
+      textDecoration: "none",
+      display: "block",
+      marginBottom: "6px",
+      fontWeight: "bold",
+    }}
+  >
+    Ξεχάσατε τον κωδικό σας;
+  </a>
+
+  <a href="/register" style={{ color: "#1f3b2e" }}>
+    Create an account
+  </a>
+</p>
+
     </div>
   );
 }
