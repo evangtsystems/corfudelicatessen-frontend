@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getApiBase } from "../lib/apiBase";
+import { getApiBase } from "../../src/lib/apiBase";
 
 export default function ResetPasswordPage() {
   const params = useSearchParams();
