@@ -5,9 +5,14 @@ export function middleware(request) {
     request.headers.get("x-forwarded-host") ||
     request.headers.get("host");
 
+  // Redirect www → non-www (force HTTPS, no port)
   if (host === "www.corfudelicatessen.com") {
-    const url = request.nextUrl.clone();
+    const url = new URL(request.url);
+
+    url.protocol = "https:";
     url.hostname = "corfudelicatessen.com";
+    url.port = ""; // 🔥 remove internal port
+
     return NextResponse.redirect(url, 301);
   }
 
