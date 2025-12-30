@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 
 export function middleware(request) {
-  const url = request.nextUrl.clone();
+  const host =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host");
 
-  // If request is coming from www → redirect to non-www
-  if (url.hostname === "www.corfudelicatessen.com") {
+  if (host === "www.corfudelicatessen.com") {
+    const url = request.nextUrl.clone();
     url.hostname = "corfudelicatessen.com";
     return NextResponse.redirect(url, 301);
   }
