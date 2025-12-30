@@ -287,7 +287,7 @@ const add = async (p) => {
                   }}
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = "/placeholder.jpg";
+                    e.target.src = "/placeholder.png";
                   }}
                 />
               ) : (
