@@ -22,11 +22,17 @@ export default function Footer() {
       >
         {/* Column 1 */}
         <div>
-          <img
-            src="https://corfudelicatessen.com/wp-content/uploads/2022/03/corfudelicatessenlogo22plus.webp"
-            alt="Corfu Delicatessen"
-            style={{ width: "160px", marginBottom: "15px" }}
-          />
+        <img
+  src="https://delicatessenimages.blob.core.windows.net/partners-logos/corfudelicatessenlogo22plus.webp"
+  alt="Corfu Delicatessen"
+  style={{ width: "160px", marginBottom: "15px" }}
+  onError={(e) => {
+    e.currentTarget.onerror = null;
+    e.currentTarget.src =
+      "https://delicatessenimages.blob.core.windows.net/assets/placeholder.webp";
+  }}
+/>
+
 
           <p style={{ margin: "6px 0", color: "rgba(245,245,240,0.85)" }}>
             📍{" "}
