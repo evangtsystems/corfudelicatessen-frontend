@@ -4,7 +4,35 @@ const nextConfig = {
 
   async redirects() {
     return [
-      // 🔴 OLD WORDPRESS ASSETS & PATHS
+      // 🇬🇷 OLD GREEK WORDPRESS PAGES
+      {
+        source: "/proionta",
+        destination: "/products",
+        permanent: true,
+      },
+
+      // 🧱 WORDPRESS PRODUCT CATEGORIES
+      {
+        source: "/product-category/:path*",
+        destination: "/products",
+        permanent: true,
+      },
+
+      // 🧱 GREEK CATEGORY / BRAND SLUGS (encoded)
+      {
+        source: "/:slug(%CE%.*)",
+        destination: "/products",
+        permanent: true,
+      },
+
+      // 🧱 ANY OLD WP CATEGORY
+      {
+        source: "/category/:path*",
+        destination: "/products",
+        permanent: true,
+      },
+
+      // 🧱 WP ASSETS & JUNK
       {
         source: "/wp-content/:path*",
         destination: "/",
@@ -21,19 +49,7 @@ const nextConfig = {
         permanent: true,
       },
 
-      // 🔴 OLD PRODUCT / CATEGORY URLS
-      {
-        source: "/product/:path*",
-        destination: "/products",
-        permanent: true,
-      },
-      {
-        source: "/category/:path*",
-        destination: "/products",
-        permanent: true,
-      },
-
-      // 🔴 OLD PHP PAGES
+      // 🧱 OLD PHP PAGES
       {
         source: "/:slug*(.php)",
         destination: "/",
