@@ -198,7 +198,7 @@ useEffect(() => {
             href="/shop"
             style={{ color: "white", textDecoration: "none", ...isActive("/shop") }}
           >
-            Shop
+            Κατάστημα
           </Link>
 
           {user ? (
@@ -237,7 +237,7 @@ useEffect(() => {
         fontWeight: "bold",
       }}
     >
-      Logout
+      Αποσύνδεση
     </span>
   </>
 ) : (
@@ -251,7 +251,7 @@ useEffect(() => {
                 padding: "6px 10px",
               }}
             >
-              Login
+              Σύνδεση
             </Link>
           )}
 
@@ -273,7 +273,7 @@ useEffect(() => {
               ...isActive("/admin/products"),
             }}
           >
-            Admin
+            Διαχειριστής
           </span>
 
           {/* CART BUTTON */}
@@ -321,7 +321,7 @@ useEffect(() => {
                 </div>
               )}
             </div>
-            <span>Cart</span>
+            <span>Το καλάθι μου</span>
           </div>
         </nav>
 
@@ -363,7 +363,7 @@ useEffect(() => {
               }}
               onClick={() => setMenuOpen(false)}
             >
-              Shop
+              Κατάστημα
             </Link>
 
             {!user && (
@@ -378,7 +378,7 @@ useEffect(() => {
                 }}
                 onClick={() => setMenuOpen(false)}
               >
-                Login
+                Σύνδεση
               </Link>
             )}
 
@@ -413,7 +413,7 @@ useEffect(() => {
       handleLogout();
     }}
   >
-    Logout
+    Αποσύνδεση
   </div>
 )}
 
@@ -439,7 +439,7 @@ useEffect(() => {
     }
   }}
 >
-  🛒 Cart {cartCount > 0 && `(${cartCount})`}
+  🛒 Το καλάθι μου {cartCount > 0 && `(${cartCount})`}
 </div>
 
 
@@ -456,7 +456,7 @@ useEffect(() => {
                 }}
                 onClick={() => setMenuOpen(false)}
               >
-                Admin
+                Διαχειριστής
               </Link>
             )}
           </div>
