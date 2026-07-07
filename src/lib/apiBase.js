@@ -1,6 +1,6 @@
 // src/lib/apiBase.js
 
-const PROD_API_BASE = "https://corfudelicatessen-backend-bhfvafbgh7cabmas.italynorth-01.azurewebsites.net";
+const PROD_API_BASE = "https://corfudelicatessenbackend1-bsagesgaeadsfube.italynorth-01.azurewebsites.net";
 const DEV_API_BASE = "http://localhost:5000";
 
 export function getApiBase() {
